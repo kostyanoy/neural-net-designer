@@ -1,7 +1,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication
 from app.ui.main_window import MainWindow
-from app.config import APP_NAME, VERSION
+from app.config import APP_NAME, VERSION, APP_STYLES
 
 
 def main():
@@ -10,12 +10,11 @@ def main():
     app.setApplicationVersion(VERSION)
 
     # Применение стилей
-    with open('app/styles.qss', 'r') as f:
+    with open(APP_STYLES, 'r') as f:
         app.setStyleSheet(f.read())
 
     window = MainWindow()
-    window.show()
-
+    window.showMaximized()
     sys.exit(app.exec())
 
 

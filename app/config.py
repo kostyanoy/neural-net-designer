@@ -4,6 +4,7 @@ ORGANIZATION = "ITMO"
 AUTHOR = "Манухин Константин"
 
 # Пути
+APP_STYLES = "app/styles.qss"
 PROJECTS_DIR = "data/projects"
 DATASETS_DIR = "data/datasets"
 TEMPLATES_DIR = "templates"
