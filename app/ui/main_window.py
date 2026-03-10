@@ -1,3 +1,4 @@
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QMainWindow, QStatusBar, QTabWidget
 
 from config import APP_NAME
@@ -45,6 +46,14 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.monitor_tab, "📊 Мониторинг")
         self.tab_widget.addTab(self.export_tab, "💾 Экспорт")
 
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.architecture_tab.left_dock)
+        self.left_dock = self.architecture_tab.left_dock
+        self.left_dock.visibilityChanged.connect(self._on_dock_visibility_changed)
+
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.architecture_tab.right_dock)
+        self.right_dock = self.architecture_tab.right_dock
+        self.right_dock.visibilityChanged.connect(self._on_dock_visibility_changed)
+
         self.tab_widget.currentChanged.connect(self._on_tab_changed)
 
     def _connect_signals(self):
@@ -69,6 +78,8 @@ class MainWindow(QMainWindow):
         self.menu_bar.fit_screen_triggered.connect(self._on_fit_screen)
         self.menu_bar.toggle_grid_triggered.connect(self._on_toggle_grid)
         self.menu_bar.toggle_theme_triggered.connect(self._toggle_theme)
+        self.menu_bar.toggle_left_dock_triggered.connect(self._toggle_left_dock)
+        self.menu_bar.toggle_right_dock_triggered.connect(self._toggle_right_dock)
 
         # --- Help ---
         self.menu_bar.docs_triggered.connect(self._on_docs)
@@ -79,6 +90,13 @@ class MainWindow(QMainWindow):
         # TODO
         tab_name = self.tab_widget.tabText(index)
         self.status_bar.showMessage(f"Active Tab: {tab_name}")
+
+        # Показываем док-панели только на вкладке Архитектуры
+        is_architecture_tab = (index == 0)
+        self.left_dock.setVisible(is_architecture_tab)
+        self.menu_bar.left_dock_action.setVisible(is_architecture_tab)
+        self.right_dock.setVisible(is_architecture_tab)
+        self.menu_bar.right_dock_action.setVisible(is_architecture_tab)
 
     # --- Слоты: File ---
 
@@ -165,6 +183,19 @@ class MainWindow(QMainWindow):
         state = "ON" if is_checked else "OFF"
         self.status_bar.showMessage(f"Action: Toggle Grid ({state})")
         print(f"Toggle Grid: {state}")
+
+    def _toggle_left_dock(self):
+        """Переключение видимости левой панели."""
+        self.left_dock.setVisible(not self.left_dock.isVisible())
+
+    def _toggle_right_dock(self):
+        """Переключение видимости правой панели."""
+        self.right_dock.setVisible(not self.right_dock.isVisible())
+
+    def _on_dock_visibility_changed(self, visible: bool):
+        """Синхронизация состояния чекбоксов в меню с видимостью панелей."""
+        self.menu_bar.left_dock_action.setChecked(self.left_dock.isVisible())
+        self.menu_bar.right_dock_action.setChecked(self.right_dock.isVisible())
 
     def _toggle_theme(self):
         """Обработка переключения темы (Dark/Light)."""

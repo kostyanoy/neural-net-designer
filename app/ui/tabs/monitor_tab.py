@@ -13,6 +13,7 @@ class MonitorTab(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
+        # TODO
         label = QLabel("Вкладка 3: Запуск и Результаты (Run & Monitor)\nЗдесь будут графики Loss/Accuracy и логи.")
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         label.setStyleSheet("font-size: 14px; color: #888;")

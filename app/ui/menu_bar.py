@@ -26,6 +26,8 @@ class CustomMenuBar(QMenuBar):
     fit_screen_triggered = pyqtSignal()
     toggle_grid_triggered = pyqtSignal(bool)
     toggle_theme_triggered = pyqtSignal()
+    toggle_left_dock_triggered = pyqtSignal()
+    toggle_right_dock_triggered = pyqtSignal()
 
     # Сигналы Help
     docs_triggered = pyqtSignal()
@@ -153,6 +155,24 @@ class CustomMenuBar(QMenuBar):
         grid_action.setShortcut("Ctrl+G")
         grid_action.toggled.connect(self.toggle_grid_triggered.emit)
         view_menu.addAction(grid_action)
+
+        view_menu.addSeparator()
+
+        left_dock_action = QAction("Show &Blocks Panel", self)
+        left_dock_action.setShortcut("Ctrl+B")
+        left_dock_action.setCheckable(True)
+        left_dock_action.setChecked(True)
+        left_dock_action.triggered.connect(self.toggle_left_dock_triggered.emit)
+        view_menu.addAction(left_dock_action)
+        self.left_dock_action = left_dock_action
+
+        right_dock_action = QAction("Show &Properties Panel", self)
+        right_dock_action.setShortcut("Ctrl+P")
+        right_dock_action.setCheckable(True)
+        right_dock_action.setChecked(True)
+        right_dock_action.triggered.connect(self.toggle_right_dock_triggered.emit)
+        view_menu.addAction(right_dock_action)
+        self.right_dock_action = right_dock_action
 
         view_menu.addSeparator()
 

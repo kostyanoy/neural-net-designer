@@ -13,6 +13,7 @@ class ExportTab(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
+        # TODO
         label = QLabel("Вкладка 4: Экспорт (Export)\nЗдесь будет генерация кода и сохранение весов.")
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         label.setStyleSheet("font-size: 14px; color: #888;")
