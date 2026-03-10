@@ -1,9 +1,8 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QMainWindow, QStatusBar, QWidget, QVBoxLayout, QLabel
+from PyQt6.QtWidgets import QMainWindow, QStatusBar, QTabWidget
 
 from config import APP_NAME
 from ui.menu_bar import CustomMenuBar
+from ui.tabs import ArchitectureTab, TrainingTab, MonitorTab, ExportTab
 
 
 class MainWindow(QMainWindow):
@@ -17,7 +16,7 @@ class MainWindow(QMainWindow):
 
         self._init_menu()
         self._init_status_bar()
-        self._init_central_widget()
+        self._init_tabs()
         self._connect_signals()
 
     def _init_menu(self):
@@ -31,19 +30,22 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage("Ready")
 
-    def _init_central_widget(self):
+    def _init_tabs(self):
         """Создание центральной области-заглушки до реализации вкладок."""
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
+        self.tab_widget = QTabWidget()
+        self.setCentralWidget(self.tab_widget)
 
-        layout = QVBoxLayout()
-        central_widget.setLayout(layout)
+        self.architecture_tab = ArchitectureTab(self)
+        self.training_tab = TrainingTab(self)
+        self.monitor_tab = MonitorTab(self)
+        self.export_tab = ExportTab(self)
 
-        # Временное приветствие
-        label = QLabel("NeuralNet Designer\n\nВыберите действие в меню File -> New Project")
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        label.setStyleSheet("font-size: 18px; color: #aaaaaa;")
-        layout.addWidget(label)
+        self.tab_widget.addTab(self.architecture_tab, "🏗️ Архитектура")
+        self.tab_widget.addTab(self.training_tab, "⚙️ Обучение")
+        self.tab_widget.addTab(self.monitor_tab, "📊 Мониторинг")
+        self.tab_widget.addTab(self.export_tab, "💾 Экспорт")
+
+        self.tab_widget.currentChanged.connect(self._on_tab_changed)
 
     def _connect_signals(self):
         """Подключение всех сигналов меню к соответствующим слотам-заглушкам."""
@@ -72,30 +74,41 @@ class MainWindow(QMainWindow):
         self.menu_bar.docs_triggered.connect(self._on_docs)
         self.menu_bar.about_triggered.connect(self._show_about)
 
+    def _on_tab_changed(self, index: int):
+        """Обработка переключения между вкладками."""
+        # TODO
+        tab_name = self.tab_widget.tabText(index)
+        self.status_bar.showMessage(f"Active Tab: {tab_name}")
+
     # --- Слоты: File ---
 
     def _on_new_project(self):
         """Обработка создания нового проекта."""
+        # TODO
         self.status_bar.showMessage("Action: New Project")
         print("Creating new project...")
 
     def _on_open_project(self):
         """Обработка открытия существующего проекта."""
+        # TODO
         self.status_bar.showMessage("Action: Open Project")
         print("Opening project dialog...")
 
     def _on_save_project(self):
         """Обработка сохранения текущего проекта."""
+        # TODO
         self.status_bar.showMessage("Action: Save Project")
         print("Saving project...")
 
     def _on_export(self, export_type: str):
         """Обработка экспорта (код, веса, проект)."""
+        # TODO
         self.status_bar.showMessage(f"Action: Export {export_type}")
         print(f"Exporting: {export_type}")
 
     def _on_settings(self):
         """Обработка открытия настроек приложения."""
+        # TODO
         self.status_bar.showMessage("Action: Settings")
         print("Opening settings...")
 
@@ -103,21 +116,25 @@ class MainWindow(QMainWindow):
 
     def _on_undo(self):
         """Обработка отмены последнего действия."""
+        # TODO
         self.status_bar.showMessage("Action: Undo")
         print("Undo requested")
 
     def _on_redo(self):
         """Обработка повтора отмененного действия."""
+        # TODO
         self.status_bar.showMessage("Action: Redo")
         print("Redo requested")
 
     def _on_delete(self):
         """Обработка удаления выбранных элементов."""
+        # TODO
         self.status_bar.showMessage("Action: Delete")
         print("Delete requested")
 
     def _on_select_all(self):
         """Обработка выделения всех элементов на канвасе."""
+        # TODO
         self.status_bar.showMessage("Action: Select All")
         print("Select All requested")
 
@@ -125,21 +142,25 @@ class MainWindow(QMainWindow):
 
     def _on_zoom_in(self):
         """Обработка увеличения масштаба канваса."""
+        # TODO
         self.status_bar.showMessage("Action: Zoom In")
         print("Zoom In requested")
 
     def _on_zoom_out(self):
         """Обработка уменьшения масштаба канваса."""
+        # TODO
         self.status_bar.showMessage("Action: Zoom Out")
         print("Zoom Out requested")
 
     def _on_fit_screen(self):
         """Обработка подгонки содержимого под размер окна."""
+        # TODO
         self.status_bar.showMessage("Action: Fit to Screen")
         print("Fit to Screen requested")
 
     def _on_toggle_grid(self, is_checked: bool):
         """Обработка переключения видимости сетки."""
+        # TODO
         # Получаем состояние чекбокса из отправителя сигнала (если нужно)
         state = "ON" if is_checked else "OFF"
         self.status_bar.showMessage(f"Action: Toggle Grid ({state})")
@@ -147,6 +168,7 @@ class MainWindow(QMainWindow):
 
     def _toggle_theme(self):
         """Обработка переключения темы (Dark/Light)."""
+        # TODO
         self.status_bar.showMessage("Action: Toggle Theme")
         print("Theme toggle requested")
 
@@ -154,10 +176,12 @@ class MainWindow(QMainWindow):
 
     def _on_docs(self):
         """Обработка открытия документации."""
+        # TODO
         self.status_bar.showMessage("Action: Open Documentation")
         print("Documentation requested")
 
     def _show_about(self):
         """Обработка отображения окна 'О программе'."""
+        # TODO
         self.status_bar.showMessage("Action: About")
         print(f"About {APP_NAME}")
