@@ -18,6 +18,7 @@ class MainWindow(QMainWindow):
         self._init_menu()
         self._init_status_bar()
         self._init_tabs()
+        self._init_docks()
         self._connect_signals()
 
     def _init_menu(self):
@@ -26,13 +27,13 @@ class MainWindow(QMainWindow):
         self.setMenuBar(self.menu_bar)
 
     def _init_status_bar(self):
-        """Создание Status Bar с начальным сообщением."""
+        """Создание Status Bar."""
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage("Ready")
 
     def _init_tabs(self):
-        """Создание центральной области-заглушки до реализации вкладок."""
+        """Создание вкладок."""
         self.tab_widget = QTabWidget()
         self.setCentralWidget(self.tab_widget)
 
@@ -46,18 +47,16 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.monitor_tab, "📊 Мониторинг")
         self.tab_widget.addTab(self.export_tab, "💾 Экспорт")
 
+    def _init_docks(self):
+        """Подключение Dock"""
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.architecture_tab.left_dock)
         self.left_dock = self.architecture_tab.left_dock
-        self.left_dock.visibilityChanged.connect(self._on_dock_visibility_changed)
 
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.architecture_tab.right_dock)
         self.right_dock = self.architecture_tab.right_dock
-        self.right_dock.visibilityChanged.connect(self._on_dock_visibility_changed)
-
-        self.tab_widget.currentChanged.connect(self._on_tab_changed)
 
     def _connect_signals(self):
-        """Подключение всех сигналов меню к соответствующим слотам-заглушкам."""
+        """Подключение всех сигналов меню к соответствующим слотам."""
         # --- File ---
         self.menu_bar.new_project_triggered.connect(self._on_new_project)
         self.menu_bar.open_project_triggered.connect(self._on_open_project)
@@ -85,18 +84,29 @@ class MainWindow(QMainWindow):
         self.menu_bar.docs_triggered.connect(self._on_docs)
         self.menu_bar.about_triggered.connect(self._show_about)
 
+        # --- Dock ---
+        self.left_dock.visibilityChanged.connect(self._on_dock_visibility_changed)
+        self.right_dock.visibilityChanged.connect(self._on_dock_visibility_changed)
+
+        # --- Tab ---
+        self.tab_widget.currentChanged.connect(self._on_tab_changed)
+
     def _on_tab_changed(self, index: int):
         """Обработка переключения между вкладками."""
         # TODO
         tab_name = self.tab_widget.tabText(index)
         self.status_bar.showMessage(f"Active Tab: {tab_name}")
 
-        # Показываем док-панели только на вкладке Архитектуры
         is_architecture_tab = (index == 0)
+        is_training_tab = (index == 1)
+        is_monitor_tab = (index == 2)
+        is_export_tab = (index == 3)
+
+        self.menu_bar.set_edit_actions_enabled(is_architecture_tab)
+        self.menu_bar.set_view_actions_enabled(is_architecture_tab)
+
         self.left_dock.setVisible(is_architecture_tab)
-        self.menu_bar.left_dock_action.setVisible(is_architecture_tab)
         self.right_dock.setVisible(is_architecture_tab)
-        self.menu_bar.right_dock_action.setVisible(is_architecture_tab)
 
     # --- Слоты: File ---
 

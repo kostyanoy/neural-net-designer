@@ -106,73 +106,71 @@ class CustomMenuBar(QMenuBar):
         """Создает меню 'Edit' с действиями редактирования графа."""
         edit_menu = self.addMenu("&Edit")
 
-        undo_action = QAction("&Undo", self)
-        undo_action.setShortcut("Ctrl+Z")
-        undo_action.triggered.connect(self.undo_triggered.emit)
-        edit_menu.addAction(undo_action)
+        self.undo_action = QAction("&Undo", self)
+        self.undo_action.setShortcut("Ctrl+Z")
+        self.undo_action.triggered.connect(self.undo_triggered.emit)
+        edit_menu.addAction(self.undo_action)
 
-        redo_action_obj = QAction("&Redo", self)
-        redo_action_obj.setShortcut("Ctrl+Y")
-        redo_action_obj.triggered.connect(self.redo_triggered.emit)
-        edit_menu.addAction(redo_action_obj)
+        self.redo_action = QAction("&Redo", self)
+        self.redo_action.setShortcut("Ctrl+Y")
+        self.redo_action.triggered.connect(self.redo_triggered.emit)
+        edit_menu.addAction(self.redo_action)
 
         edit_menu.addSeparator()
 
-        delete_action = QAction("&Delete", self)
-        delete_action.setShortcut("Del")
-        delete_action.triggered.connect(self.delete_triggered.emit)
-        edit_menu.addAction(delete_action)
+        self.delete_action = QAction("&Delete", self)
+        self.delete_action.setShortcut("Del")
+        self.delete_action.triggered.connect(self.delete_triggered.emit)
+        edit_menu.addAction(self.delete_action)
 
-        select_all_action = QAction("Select &All", self)
-        select_all_action.setShortcut("Ctrl+A")
-        select_all_action.triggered.connect(self.select_all_triggered.emit)
-        edit_menu.addAction(select_all_action)
+        self.select_all_action = QAction("Select &All", self)
+        self.select_all_action.setShortcut("Ctrl+A")
+        self.select_all_action.triggered.connect(self.select_all_triggered.emit)
+        edit_menu.addAction(self.select_all_action)
 
     def _create_view_menu(self):
         """Создает меню 'View' с настройками отображения и темой."""
         view_menu = self.addMenu("&View")
 
-        zoom_in = QAction("Zoom &In", self)
-        zoom_in.setShortcut("Ctrl++")
-        zoom_in.triggered.connect(self.zoom_in_triggered.emit)
-        view_menu.addAction(zoom_in)
+        self.zoom_in = QAction("Zoom &In", self)
+        self.zoom_in.setShortcut("Ctrl++")
+        self.zoom_in.triggered.connect(self.zoom_in_triggered.emit)
+        view_menu.addAction(self.zoom_in)
 
-        zoom_out = QAction("Zoom &Out", self)
-        zoom_out.setShortcut("Ctrl+-")
-        zoom_out.triggered.connect(self.zoom_out_triggered.emit)
-        view_menu.addAction(zoom_out)
+        self.zoom_out = QAction("Zoom &Out", self)
+        self.zoom_out.setShortcut("Ctrl+-")
+        self.zoom_out.triggered.connect(self.zoom_out_triggered.emit)
+        view_menu.addAction(self.zoom_out)
 
-        fit_screen = QAction("&Fit to Screen", self)
-        fit_screen.setShortcut("Ctrl+0")
-        fit_screen.triggered.connect(self.fit_screen_triggered.emit)
-        view_menu.addAction(fit_screen)
-
-        view_menu.addSeparator()
-
-        grid_action = QAction("Toggle &Grid", self)
-        grid_action.setCheckable(True)
-        grid_action.setChecked(True)
-        grid_action.setShortcut("Ctrl+G")
-        grid_action.toggled.connect(self.toggle_grid_triggered.emit)
-        view_menu.addAction(grid_action)
+        self.fit_screen = QAction("&Fit to Screen", self)
+        self.fit_screen.setShortcut("Ctrl+0")
+        self.fit_screen.triggered.connect(self.fit_screen_triggered.emit)
+        view_menu.addAction(self.fit_screen)
 
         view_menu.addSeparator()
 
-        left_dock_action = QAction("Show &Blocks Panel", self)
-        left_dock_action.setShortcut("Ctrl+B")
-        left_dock_action.setCheckable(True)
-        left_dock_action.setChecked(True)
-        left_dock_action.triggered.connect(self.toggle_left_dock_triggered.emit)
-        view_menu.addAction(left_dock_action)
-        self.left_dock_action = left_dock_action
+        self.grid_action = QAction("Toggle &Grid", self)
+        self.grid_action.setCheckable(True)
+        self.grid_action.setChecked(True)
+        self.grid_action.setShortcut("Ctrl+G")
+        self.grid_action.toggled.connect(self.toggle_grid_triggered.emit)
+        view_menu.addAction(self.grid_action)
 
-        right_dock_action = QAction("Show &Properties Panel", self)
-        right_dock_action.setShortcut("Ctrl+P")
-        right_dock_action.setCheckable(True)
-        right_dock_action.setChecked(True)
-        right_dock_action.triggered.connect(self.toggle_right_dock_triggered.emit)
-        view_menu.addAction(right_dock_action)
-        self.right_dock_action = right_dock_action
+        view_menu.addSeparator()
+
+        self.left_dock_action = QAction("Show &Blocks Panel", self)
+        self.left_dock_action.setShortcut("Ctrl+B")
+        self.left_dock_action.setCheckable(True)
+        self.left_dock_action.setChecked(True)
+        self.left_dock_action.triggered.connect(self.toggle_left_dock_triggered.emit)
+        view_menu.addAction(self.left_dock_action)
+
+        self.right_dock_action = QAction("Show &Properties Panel", self)
+        self.right_dock_action.setShortcut("Ctrl+P")
+        self.right_dock_action.setCheckable(True)
+        self.right_dock_action.setChecked(True)
+        self.right_dock_action.triggered.connect(self.toggle_right_dock_triggered.emit)
+        view_menu.addAction(self.right_dock_action)
 
         view_menu.addSeparator()
 
@@ -194,3 +192,19 @@ class CustomMenuBar(QMenuBar):
         about_action.setShortcut("Shift+F1")
         about_action.triggered.connect(self.about_triggered.emit)
         help_menu.addAction(about_action)
+
+    def set_edit_actions_enabled(self, enabled: bool):
+        """Включает или выключает действия меню Edit."""
+        self.undo_action.setEnabled(enabled)
+        self.redo_action.setEnabled(enabled)
+        self.delete_action.setEnabled(enabled)
+        self.select_all_action.setEnabled(enabled)
+
+    def set_view_actions_enabled(self, enabled: bool):
+        """Включает или выключает действия меню View."""
+        self.zoom_in.setEnabled(enabled)
+        self.zoom_out.setEnabled(enabled)
+        self.fit_screen.setEnabled(enabled)
+        self.grid_action.setEnabled(enabled)
+        self.left_dock_action.setEnabled(enabled)
+        self.right_dock_action.setEnabled(enabled)
