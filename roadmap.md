@@ -61,6 +61,7 @@
 - Отображение размерностей тензоров
 - Визуальная валидация соединений
 - Выделение блоков
+- Zoom in/out
 - Визуализация активного блока
 - Валидация графа
   - Проверка связности графа
@@ -151,7 +152,7 @@
 ## Технические особенности
 
 ### Архитектура:
-- **GUI Framework:** PyQt6
+- **GUI Framework:** PyQt5
 - **Graph Editor:** QGraphicsView/Scene или NodeGraphQt
 - **Plotting:** pyqtgraph / matplotlib
 - **Code Generation:** Jinja2 templates

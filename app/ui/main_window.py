@@ -1,5 +1,5 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QMainWindow, QStatusBar, QTabWidget
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import QMainWindow, QStatusBar, QTabWidget
 
 from config import APP_NAME
 from ui.menu_bar import CustomMenuBar
@@ -49,10 +49,10 @@ class MainWindow(QMainWindow):
 
     def _init_docks(self):
         """Подключение Dock"""
-        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.architecture_tab.left_dock)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, self.architecture_tab.left_dock)
         self.left_dock = self.architecture_tab.left_dock
 
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.architecture_tab.right_dock)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.architecture_tab.right_dock)
         self.right_dock = self.architecture_tab.right_dock
 
     def _connect_signals(self):

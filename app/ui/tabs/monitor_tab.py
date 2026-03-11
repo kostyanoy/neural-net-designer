@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
-from PyQt6.QtCore import Qt
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget
 
 
 class MonitorTab(QWidget):
@@ -15,6 +15,6 @@ class MonitorTab(QWidget):
 
         # TODO
         label = QLabel("Вкладка 3: Запуск и Результаты (Run & Monitor)\nЗдесь будут графики Loss/Accuracy и логи.")
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         label.setStyleSheet("font-size: 14px; color: #888;")
         layout.addWidget(label)

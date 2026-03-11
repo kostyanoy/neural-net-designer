@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
-from PyQt6.QtCore import Qt
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget
 
 
 class ExportTab(QWidget):
@@ -15,6 +15,6 @@ class ExportTab(QWidget):
 
         # TODO
         label = QLabel("Вкладка 4: Экспорт (Export)\nЗдесь будет генерация кода и сохранение весов.")
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         label.setStyleSheet("font-size: 14px; color: #888;")
         layout.addWidget(label)

@@ -1,5 +1,5 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel
 
 
 class TrainingTab(QWidget):
@@ -12,7 +12,8 @@ class TrainingTab(QWidget):
         self.setLayout(layout)
 
         # TODO
-        label = QLabel("Вкладка 2: Данные и Обучение (Data & Training)\nЗдесь будут настройки датасета и гиперпараметров.")
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        label = QLabel(
+            "Вкладка 2: Данные и Обучение (Data & Training)\nЗдесь будут настройки датасета и гиперпараметров.")
+        label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         label.setStyleSheet("font-size: 14px; color: #888;")
         layout.addWidget(label)

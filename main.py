@@ -1,7 +1,9 @@
 import sys
-from PyQt6.QtWidgets import QApplication
-from app.ui.main_window import MainWindow
+
+from PyQt5.QtWidgets import QApplication
+
 from app.config import APP_NAME, VERSION, APP_STYLES
+from app.ui.main_window import MainWindow
 
 
 def main():
@@ -15,7 +17,7 @@ def main():
 
     window = MainWindow()
     window.showMaximized()
-    sys.exit(app.exec())
+    sys.exit(app.exec_())
 
 
 if __name__ == '__main__':

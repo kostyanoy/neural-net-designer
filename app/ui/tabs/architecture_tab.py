@@ -1,5 +1,6 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QVBoxLayout, QWidget, QLabel, QDockWidget, QLineEdit
+from NodeGraphQt import NodeGraph
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QLineEdit, QLabel
 
 
 class ArchitectureTab(QWidget):
@@ -38,27 +39,21 @@ class ArchitectureTab(QWidget):
         # Заглушка для списка блоков
         # TODO
         placeholder = QLabel("Список блоков\n(будет позже)")
-        placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        placeholder.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         placeholder.setStyleSheet("color: #888; font-style: italic;")
         layout.addWidget(placeholder)
 
         dock.setWidget(container)
         return dock
 
-    def _create_central_area(self) -> QWidget:
+    def _create_central_area(self):
         """Создание центральной области для canvas."""
-        container = QWidget()
-        layout = QVBoxLayout()
-        container.setLayout(layout)
+        self.graph = NodeGraph()
+        graph_widget = self.graph.widget
+        graph_widget.setParent(self)
+        self.graph.set_grid_mode(True)
 
-        # Заглушка для будущего canvas
-        # TODO
-        placeholder = QLabel("🎨 Canvas для архитектуры\n(перетаскивание блоков)")
-        placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        placeholder.setStyleSheet("font-size: 16px; color: #666; background-color: #2b2b2b; min-height: 400px;")
-        layout.addWidget(placeholder)
-
-        return container
+        return graph_widget
 
     def _create_right_dock(self) -> QDockWidget:
         """Создание правой панели с настройками слоя."""
@@ -72,7 +67,7 @@ class ArchitectureTab(QWidget):
         # Заглушка для настроек
         # TODO
         placeholder = QLabel("Параметры слоя\n(выберите блок)")
-        placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        placeholder.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         placeholder.setStyleSheet("color: #888; font-style: italic;")
         layout.addWidget(placeholder)
 
@@ -84,10 +79,10 @@ class ArchitectureTab(QWidget):
         # Разрешаем сворачивание и перемещение
         for dock in [self.left_dock, self.right_dock]:
             dock.setFeatures(
-                QDockWidget.DockWidgetFeature.DockWidgetClosable |
-                QDockWidget.DockWidgetFeature.DockWidgetMovable
+                QDockWidget.DockWidgetClosable |
+                QDockWidget.DockWidgetMovable
             )
             dock.setAllowedAreas(
-                Qt.DockWidgetArea.LeftDockWidgetArea |
-                Qt.DockWidgetArea.RightDockWidgetArea
+                QtCore.Qt.DockWidgetArea.LeftDockWidgetArea |
+                QtCore.Qt.DockWidgetArea.RightDockWidgetArea
             )
