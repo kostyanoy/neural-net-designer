@@ -51,8 +51,6 @@ class ArchitectureTab(QWidget):
         self.graph = NodeGraph()
         graph_widget = self.graph.widget
         graph_widget.setParent(self)
-        self.graph.set_grid_mode(True)
-
         return graph_widget
 
     def _create_right_dock(self) -> QDockWidget:
