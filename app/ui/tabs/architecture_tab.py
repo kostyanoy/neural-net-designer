@@ -1,9 +1,11 @@
 from NodeGraphQt import NodeGraph
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore
+from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QLineEdit, QLabel, QListWidget, QAbstractItemView, \
     QListWidgetItem
 
 from core.nodes.dense_node import DenseNode
+from ui.widgets.draggable_list_widget import DraggableListWidget
 
 
 class ArchitectureTab(QWidget):
@@ -15,7 +17,6 @@ class ArchitectureTab(QWidget):
         self._register_nodes()
 
         self.graph.create_node("neural_net.DenseNode")
-
 
     def _init_ui(self):
         layout = QVBoxLayout()
@@ -43,7 +44,7 @@ class ArchitectureTab(QWidget):
         self.search_input.textChanged.connect(self._filter_blocks)
         layout.addWidget(self.search_input)
 
-        self.block_list = QListWidget()
+        self.block_list = DraggableListWidget()
         self.block_list.setViewMode(QListWidget.ViewMode.ListMode)
         self.block_list.setMovement(QListWidget.Movement.Static)
         self.block_list.setDragEnabled(True)
@@ -51,7 +52,6 @@ class ArchitectureTab(QWidget):
         layout.addWidget(self.block_list)
 
         self._populate_blocks_list()
-        self.block_list.installEventFilter(self)
 
         dock.setWidget(container)
         return dock
@@ -75,6 +75,11 @@ class ArchitectureTab(QWidget):
         self.graph = NodeGraph()
         graph_widget = self.graph.widget
         graph_widget.setParent(self)
+
+        self.graph_view = self.graph.viewer()
+        self.graph_view.setAcceptDrops(True)
+        self.graph_view.installEventFilter(self)
+
         return graph_widget
 
     def _create_right_dock(self) -> QDockWidget:
@@ -116,3 +121,21 @@ class ArchitectureTab(QWidget):
         for i in range(self.block_list.count()):
             item = self.block_list.item(i)
             item.setHidden(text.lower() not in item.text().lower())
+
+    def eventFilter(self, source, event):
+        """Перехват событий Drag & Drop."""
+        if event.type() == QEvent.DragEnter:
+            if event.mimeData().hasFormat(DraggableListWidget.NODE_MIME_TYPE):
+                event.acceptProposedAction()
+                return True
+
+        if event.type() == QEvent.Drop:
+            if event.mimeData().hasFormat(DraggableListWidget.NODE_MIME_TYPE):
+                raw_data = event.mimeData().data(DraggableListWidget.NODE_MIME_TYPE)
+                node_id = raw_data.data().decode('utf-8')
+                scene_pos = self.graph_view.mapToScene(event.pos())
+                self.graph.create_node(node_id, pos=(scene_pos.x(), scene_pos.y()))
+                event.acceptProposedAction()
+                return True
+
+        return super().eventFilter(source, event)
