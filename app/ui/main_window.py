@@ -91,6 +91,9 @@ class MainWindow(QMainWindow):
         # --- Tab ---
         self.tab_widget.currentChanged.connect(self._on_tab_changed)
 
+        # --- Architecture Tab ---
+        self.architecture_tab.graph.node_selected.connect(self._on_node_selected)
+
     def _on_tab_changed(self, index: int):
         """Обработка переключения между вкладками."""
         # TODO
@@ -107,6 +110,13 @@ class MainWindow(QMainWindow):
 
         self.left_dock.setVisible(is_architecture_tab)
         self.right_dock.setVisible(is_architecture_tab)
+
+    def _on_node_selected(self, node):
+        """Обработка выбора узла на графе."""
+        if node:
+            self.status_bar.showMessage(f"Selected Node: {node.name()}")
+        else:
+            self.status_bar.showMessage("No node selected")
 
     # --- Слоты: File ---
 
