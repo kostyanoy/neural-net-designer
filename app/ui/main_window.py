@@ -1,7 +1,11 @@
+from pathlib import Path
+
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QMainWindow, QStatusBar, QTabWidget
+from PyQt5.QtWidgets import QMainWindow, QStatusBar, QTabWidget, QMessageBox
 
 from config import APP_NAME
+from core.project_manager import ProjectManager
+from ui.dialog.message_boxes import save_changes_box, choose_open_file, choose_save_file
 from ui.menu_bar import CustomMenuBar
 from ui.tabs import ArchitectureTab, TrainingTab, MonitorTab, ExportTab
 
@@ -13,6 +17,9 @@ class MainWindow(QMainWindow):
         """Инициализация главного окна и подключение компонентов."""
         super().__init__()
 
+        self.project_manager = ProjectManager()
+        self._modified = False
+
         self.setWindowTitle(APP_NAME)
 
         self._init_menu()
@@ -20,6 +27,7 @@ class MainWindow(QMainWindow):
         self._init_tabs()
         self._init_docks()
         self._connect_signals()
+        self._init_project()
 
     def _init_menu(self):
         """Создание и установка Menu Bar."""
@@ -61,6 +69,7 @@ class MainWindow(QMainWindow):
         self.menu_bar.new_project_triggered.connect(self._on_new_project)
         self.menu_bar.open_project_triggered.connect(self._on_open_project)
         self.menu_bar.save_project_triggered.connect(self._on_save_project)
+        self.menu_bar.save_project_as_triggered.connect(self._on_save_project_as)
         self.menu_bar.export_triggered.connect(self._on_export)
         self.menu_bar.settings_triggered.connect(self._on_settings)
         self.menu_bar.exit_triggered.connect(self.close)
@@ -94,49 +103,63 @@ class MainWindow(QMainWindow):
         # --- Architecture Tab ---
         self.architecture_tab.graph.node_selected.connect(self._on_node_selected)
 
-    def _on_tab_changed(self, index: int):
-        """Обработка переключения между вкладками."""
-        # TODO
-        tab_name = self.tab_widget.tabText(index)
-        self.status_bar.showMessage(f"Active Tab: {tab_name}")
+        # --- Project Manager ---
+        self.project_manager.project_loaded.connect(self._on_project_loaded)
+        self.project_manager.project_saved.connect(self._on_project_saved)
+        self.project_manager.project_changed.connect(self._on_project_changed)
 
-        is_architecture_tab = (index == 0)
-        is_training_tab = (index == 1)
-        is_monitor_tab = (index == 2)
-        is_export_tab = (index == 3)
-
-        self.menu_bar.set_edit_actions_enabled(is_architecture_tab)
-        self.menu_bar.set_view_actions_enabled(is_architecture_tab)
-
-        self.left_dock.setVisible(is_architecture_tab)
-        self.right_dock.setVisible(is_architecture_tab)
-
-    def _on_node_selected(self, node):
-        """Обработка выбора узла на графе."""
-        if node:
-            self.status_bar.showMessage(f"Selected Node: {node.name()}")
-        else:
-            self.status_bar.showMessage("No node selected")
+    def _init_project(self):
+        self.project_manager.create_new_project()
 
     # --- Слоты: File ---
 
     def _on_new_project(self):
         """Обработка создания нового проекта."""
-        # TODO
-        self.status_bar.showMessage("Action: New Project")
-        print("Creating new project...")
+        if self._modified:
+            reply = save_changes_box(self)
+            if reply == QMessageBox.Save:
+                self._on_save_project()
+            elif reply == QMessageBox.Cancel:
+                return
+
+        self.project_manager.create_new_project()
+        self.architecture_tab.graph.clear_session()
+        self.status_bar.showMessage("Создан новый проект")
 
     def _on_open_project(self):
         """Обработка открытия существующего проекта."""
-        # TODO
-        self.status_bar.showMessage("Action: Open Project")
-        print("Opening project dialog...")
+        if self._modified:
+            reply = save_changes_box(self)
+            if reply == QMessageBox.Save:
+                self._on_save_project()
+            elif reply == QMessageBox.Cancel:
+                return
+
+        path, _ = choose_open_file(self)
+        if path:
+            project_data = self.project_manager.load_project(path)
+            self.project_manager.deserialize_graph(self.architecture_tab.graph, project_data)
+            self.status_bar.showMessage(f"Загружен проект из файла: {path}")
 
     def _on_save_project(self):
         """Обработка сохранения текущего проекта."""
-        # TODO
-        self.status_bar.showMessage("Action: Save Project")
-        print("Saving project...")
+        if self.project_manager.project_path:
+            path = self.project_manager.project_path
+            self.project_manager.save_project(self.project_manager.project_path, self.architecture_tab.graph)
+            self.status_bar.showMessage(f"Проект сохранен в файл: {path}")
+        else:
+            self._on_save_project_as()
+
+    def _on_save_project_as(self):  # ← ДОБАВИТЬ новый метод
+        """Обработка сохранения проекта как..."""
+        path, _ = choose_save_file(self, self.project_manager.get_project_name())
+        if path:
+            if not path.endswith(".nnd"):
+                path += ".nnd"
+            name = Path(path).stem
+            self.project_manager.set_project_name(name)
+            self.project_manager.save_project(path, self.architecture_tab.graph)
+            self.status_bar.showMessage(f"Проект сохранен в файл: {path}")
 
     def _on_export(self, export_type: str):
         """Обработка экспорта (код, веса, проект)."""
@@ -236,3 +259,45 @@ class MainWindow(QMainWindow):
         # TODO
         self.status_bar.showMessage("Action: About")
         print(f"About {APP_NAME}")
+
+    def _on_tab_changed(self, index: int):
+        """Обработка переключения между вкладками."""
+        # TODO
+        tab_name = self.tab_widget.tabText(index)
+        self.status_bar.showMessage(f"Active Tab: {tab_name}")
+
+        is_architecture_tab = (index == 0)
+        is_training_tab = (index == 1)
+        is_monitor_tab = (index == 2)
+        is_export_tab = (index == 3)
+
+        self.menu_bar.set_edit_actions_enabled(is_architecture_tab)
+        self.menu_bar.set_view_actions_enabled(is_architecture_tab)
+
+        self.left_dock.setVisible(is_architecture_tab)
+        self.right_dock.setVisible(is_architecture_tab)
+
+    def _on_node_selected(self, node):
+        """Обработка выбора узла на графе."""
+        if node:
+            self.status_bar.showMessage(f"Selected Node: {node.name()}")
+        else:
+            self.status_bar.showMessage("No node selected")
+
+    def _on_project_loaded(self, project_data: dict):
+        """Обработка загрузки проекта."""
+        name = project_data.get("metadata", {}).get("name", "Untitled")
+        self.setWindowTitle(f"{name} - NeuralNet Designer")
+        self._modified = False
+
+    def _on_project_saved(self, path: str):
+        """Обработка сохранения проекта."""
+        name = self.project_manager.get_project_name()
+        self.setWindowTitle(f"{name} - NeuralNet Designer")
+        self._modified = False
+
+    def _on_project_changed(self):
+        """Обработка изменений в проекте."""
+        self._modified = True
+        name = self.project_manager.get_project_name()
+        self.setWindowTitle(f"{name}* - NeuralNet Designer")

@@ -9,6 +9,7 @@ class CustomMenuBar(QMenuBar):
     new_project_triggered = pyqtSignal()
     open_project_triggered = pyqtSignal()
     save_project_triggered = pyqtSignal()
+    save_project_as_triggered = pyqtSignal()
     export_triggered = pyqtSignal(str)
     settings_triggered = pyqtSignal()
     exit_triggered = pyqtSignal()
@@ -62,6 +63,11 @@ class CustomMenuBar(QMenuBar):
         save_action.setShortcut("Ctrl+S")
         save_action.triggered.connect(self.save_project_triggered.emit)
         file_menu.addAction(save_action)
+
+        save_as_action = QAction("Save Project &As...", self)
+        save_as_action.setShortcut("Ctrl+Shift+S")
+        save_as_action.triggered.connect(self.save_project_as_triggered.emit)
+        file_menu.addAction(save_as_action)
 
         file_menu.addSeparator()
 
