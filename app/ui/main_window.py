@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
         self.tab_widget = QTabWidget()
         self.setCentralWidget(self.tab_widget)
 
-        self.architecture_tab = ArchitectureTab(self)
+        self.architecture_tab = ArchitectureTab(self, self.project_manager)
         self.training_tab = TrainingTab(self)
         self.monitor_tab = MonitorTab(self)
         self.export_tab = ExportTab(self)

@@ -1,13 +1,37 @@
-from NodeGraphQt import BaseNode
+from core.nodes.base_node import MyBaseNode, PropertyType
 
 
-class DenseNode(BaseNode):
-    __identifier__ = 'neural_net'
+class DenseNode(MyBaseNode):
     NODE_NAME = 'Dense'
 
-    def __init__(self):
-        super(DenseNode, self).__init__()
+    PROPERTY_SCHEMA = {
+        "units": {
+            "type": PropertyType.INT,
+            "label": "Нейроны:",
+            "default": 64,
+            "min": 1,
+            "max": 10000
+        },
+        "activation": {
+            "type": PropertyType.COMBO,
+            "label": "Активация:",
+            "default": "relu",
+            "options": ["relu", "sigmoid", "tanh", "softmax", "linear"]
+        },
+        "use_bias": {
+            "type": PropertyType.CHECKBOX,
+            "label": "Bias:",
+            "default": True
+        },
+        "dropout": {
+            "type": PropertyType.SLIDER,
+            "label": "Dropout:",
+            "default": 0.0,
+            "min": 0.0,
+            "max": 0.9,
+        }
+    }
+
+    def _init_ports(self):
         self.add_input('input')
         self.add_output('output')
-        self.add_text_input("units", "Units:", text="64", tab="properties")
-        self.add_text_input("activation", "Activation:", text="relu", tab="properties")

@@ -1,20 +1,26 @@
 from NodeGraphQt import NodeGraph
 from PyQt5 import QtCore
 from PyQt5.QtCore import QEvent
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QLineEdit, QLabel, QListWidget, QAbstractItemView, \
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QLineEdit, QListWidget, QAbstractItemView, \
     QListWidgetItem
 
+from core.nodes.base_node import MyBaseNode
 from core.nodes.dense_node import DenseNode
+from core.project_manager import ProjectManager
 from ui.widgets.draggable_list_widget import DraggableListWidget
+from ui.widgets.property_panel import PropertyPanel
 
 
 class ArchitectureTab(QWidget):
     """Вкладка для визуального проектирования архитектуры нейросети."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent, project_manager: ProjectManager):
         super().__init__(parent)
         self._init_ui()
         self._register_nodes()
+        self._connect_signals()
+
+        self.project_manager = project_manager
 
         self.graph.create_node("neural_net.DenseNode")
 
@@ -85,18 +91,9 @@ class ArchitectureTab(QWidget):
     def _create_right_dock(self) -> QDockWidget:
         """Создание правой панели с настройками слоя."""
         dock = QDockWidget("⚙️ Свойства", self)
-        container = QWidget()
-        layout = QVBoxLayout()
-        container.setLayout(layout)
-
-        # Заглушка для настроек
-        # TODO
-        placeholder = QLabel("Параметры слоя\n(выберите блок)")
-        placeholder.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        placeholder.setStyleSheet("color: #888; font-style: italic;")
-        layout.addWidget(placeholder)
-
-        dock.setWidget(container)
+        self.property_panel = PropertyPanel(self)
+        self.property_panel.property_changed.connect(self._on_property_changed)
+        dock.setWidget(self.property_panel)
         return dock
 
     def _configure_docks(self):
@@ -139,3 +136,24 @@ class ArchitectureTab(QWidget):
                 return True
 
         return super().eventFilter(source, event)
+
+    def _connect_signals(self):
+        """Подключение сигналов для синхронизации свойств"""
+        self.graph.node_selection_changed.connect(self._on_nodes_selected)
+        self.graph.property_changed.connect(self._on_node_property_changed)
+
+    def _on_nodes_selected(self, nodes: list[MyBaseNode]):
+        """При выборе узла - загрузить его свойства в правую панель"""
+        if len(nodes) == 0:
+            self.property_panel.set_node(None)
+        else:
+            self.property_panel.set_node(nodes[0])
+
+    def _on_node_property_changed(self, node: MyBaseNode, prop_name: str, prop_value: object):
+        """При изменении свойства"""
+        if self.property_panel.current_node == node:
+            self.property_panel.update_property_value(prop_name, prop_value)
+
+    def _on_property_changed(self, prop_name: str, prop_value: object):
+        """Обработка изменения свойства из панели"""
+        self.project_manager.project_changed.emit()
