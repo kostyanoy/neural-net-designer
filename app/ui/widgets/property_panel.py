@@ -1,5 +1,6 @@
 from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox, QSlider
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox, QSlider, \
+    QHBoxLayout
 
 from core.nodes.base_node import MyBaseNode, PropertyType
 
@@ -62,7 +63,7 @@ class PropertyPanel(QWidget):
             self.properties_layout.addWidget(container)
 
             cur_value = node.get_property(prop_name)
-            self._set_widget_value(widget, prop_def["type"], cur_value)
+            self._set_widget_value(widget, prop_name, prop_def, cur_value)
 
     def _create_property_widget(self, prop_name: str, prop_def: dict):
         """Создать UI элемент для свойства"""
@@ -92,18 +93,40 @@ class PropertyPanel(QWidget):
             widget = QCheckBox()
             widget.stateChanged.connect(lambda v: self._on_property_changed(prop_name, v == 2))
         elif ptype == PropertyType.SLIDER:
+            _min = prop_def["min"]
+            _max = prop_def["max"]
+            _step = prop_def["step"]
+
             widget = QSlider()
             widget.setOrientation(Qt.Orientation.Horizontal)
-            widget.setRange(int(prop_def["min"] * 10), int(prop_def["max"] * 10))
-            widget.valueChanged.connect(lambda v: self._on_property_changed(prop_name, v / 10.0))
+            widget.setRange(int(_min / _step), int(_max / _step))
+
+            values_layout = QHBoxLayout()
+            min_label = QLabel(f"{_min}")
+            min_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            value_label = QLabel(f"{prop_def['default']}")
+            value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            max_label = QLabel(f"{_max}")
+            max_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+
+            slider_container = QWidget()
+            values_layout.addWidget(min_label)
+            values_layout.addWidget(value_label)
+            values_layout.addWidget(max_label)
+            slider_container.setLayout(values_layout)
+            layout.addWidget(slider_container)
+
+            widget.valueChanged.connect(lambda v: self._on_property_changed(prop_name, v * _step))
+            self.property_containers[f"{prop_name}_value"] = value_label
         else:
             return None, None
 
         layout.addWidget(widget)
         return container, widget
 
-    def _set_widget_value(self, widget: QWidget, ptype: PropertyType, value):
+    def _set_widget_value(self, widget: QWidget, prop_name, prop_def: dict, value):
         """Установить значение в виджет"""
+        ptype = prop_def["type"]
         if ptype == PropertyType.INT:
             widget.setValue(int(value))
         elif ptype == PropertyType.FLOAT:
@@ -113,7 +136,8 @@ class PropertyPanel(QWidget):
         elif ptype == PropertyType.CHECKBOX:
             widget.setChecked(bool(value))
         elif ptype == PropertyType.SLIDER:
-            widget.setValue(int(value * 10))
+            widget.setValue(int(value / prop_def["step"]))
+            self.property_containers[f"{prop_name}_value"].setText(str(round(value, 4)))
 
     def _on_property_changed(self, prop_name: str, value):
         """Обработка изменения свойства"""
@@ -126,4 +150,4 @@ class PropertyPanel(QWidget):
         if prop_name in self.property_widgets:
             widget = self.property_widgets[prop_name]
             schema = self.current_node.get_property_schema()
-            self._set_widget_value(widget, schema[prop_name]["type"], value)
+            self._set_widget_value(widget, prop_name, schema[prop_name], value)

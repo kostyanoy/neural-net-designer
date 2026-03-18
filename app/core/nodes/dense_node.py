@@ -29,6 +29,7 @@ class DenseNode(MyBaseNode):
             "default": 0.0,
             "min": 0.0,
             "max": 0.9,
+            "step": 0.1,
         }
     }
 
