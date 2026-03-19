@@ -1,5 +1,8 @@
-from PyQt5 import QtCore
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel
+from PyQt5 import Qt, QtCore
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QSplitter
+
+from ui.widgets.data_widget import DataWidget
+from ui.widgets.training_widget import TrainingWidget
 
 
 class TrainingTab(QWidget):
@@ -11,9 +14,13 @@ class TrainingTab(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        # TODO
-        label = QLabel(
-            "Вкладка 2: Данные и Обучение (Data & Training)\nЗдесь будут настройки датасета и гиперпараметров.")
-        label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        label.setStyleSheet("font-size: 14px; color: #888;")
-        layout.addWidget(label)
+        splitter = QSplitter()
+        splitter.setOrientation(QtCore.Qt.Orientation.Horizontal)
+
+        self.data_widget = DataWidget(self)
+        self.training_widget = TrainingWidget(self)
+
+        splitter.addWidget(self.data_widget)
+        splitter.addWidget(self.training_widget)
+
+        layout.addWidget(splitter)
