@@ -10,12 +10,14 @@ def save_changes_box(parent=None):
         defaultButton=QMessageBox.Save
     )
 
+
 def choose_open_file(parent=None):
     return QFileDialog.getOpenFileName(
-            parent,
-            "Открыть проект",
-            filter="Project Files (*.nnd);;All files (*)"
-        )
+        parent,
+        "Открыть проект",
+        filter="Project Files (*.nnd);;All files (*)"
+    )
+
 
 def choose_save_file(parent=None, name="Untitled"):
     return QFileDialog.getSaveFileName(
@@ -23,4 +25,20 @@ def choose_save_file(parent=None, name="Untitled"):
         "Сохранить проект как",
         f"{name}.nnd",
         "Project Files (*.nnd);;All Files (*)"
+    )
+
+
+def choose_file_dataset(parent=None):
+    return QFileDialog.getOpenFileName(
+        parent,
+        "Выберите CSV файл",
+        "",
+        "CSV Files (*.csv);;All Files (*)"
+    )
+
+
+def choose_dir_dataset(parent=None):
+    return QFileDialog.getExistingDirectory(
+        parent,
+        "Выберите папку с изображениями"
     )
