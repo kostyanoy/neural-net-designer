@@ -1,8 +1,11 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QLabel, QPushButton, QFormLayout
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QLabel, QFormLayout
 
 
 class TrainingWidget(QWidget):
     """Виджет настроек обучения (заглушка)"""
+
+    training_config_changed = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -24,3 +27,23 @@ class TrainingWidget(QWidget):
         layout.addWidget(train_group)
 
         layout.addStretch()
+
+    def clear_session(self):
+        """Сбросить параметры обучения к значениям по умолчанию"""
+        # TODO Сброс к стандартным значениям
+
+    def get_config(self) -> dict:
+        return {
+            "optimizer": "adam",  # TODO: реальные значения из UI
+            "learning_rate": 0.001,
+            "batch_size": 32,
+            "epochs": 10
+        }
+
+    def set_config(self, config: dict):
+        """Восстановить конфигурацию обучения"""
+        if not config:
+            return
+        # TODO
+
+        self.training_config_changed.emit()

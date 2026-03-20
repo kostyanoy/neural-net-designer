@@ -46,7 +46,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tab_widget)
 
         self.architecture_tab = ArchitectureTab(self, self.project_manager)
-        self.training_tab = TrainingTab(self)
+        self.training_tab = TrainingTab(self, self.project_manager)
         self.monitor_tab = MonitorTab(self)
         self.export_tab = ExportTab(self)
 
@@ -124,6 +124,7 @@ class MainWindow(QMainWindow):
 
         self.project_manager.create_new_project()
         self.architecture_tab.graph.clear_session()
+        self.training_tab.clear_session()
         self.status_bar.showMessage("Создан новый проект")
 
     def _on_open_project(self):
@@ -138,14 +139,18 @@ class MainWindow(QMainWindow):
         path, _ = choose_open_file(self)
         if path:
             project_data = self.project_manager.load_project(path)
-            self.project_manager.deserialize_graph(self.architecture_tab.graph, project_data)
+            self.architecture_tab.deserialize_graph(project_data["architecture"])
+            self.training_tab.set_config(project_data["training"])
+
             self.status_bar.showMessage(f"Загружен проект из файла: {path}")
 
     def _on_save_project(self):
         """Обработка сохранения текущего проекта."""
         if self.project_manager.project_path:
             path = self.project_manager.project_path
-            self.project_manager.save_project(self.project_manager.project_path, self.architecture_tab.graph)
+            self.project_manager.save_project(self.project_manager.project_path,
+                                              self.architecture_tab.serialize_graph(),
+                                              self.training_tab.get_config())
             self.status_bar.showMessage(f"Проект сохранен в файл: {path}")
         else:
             self._on_save_project_as()
@@ -158,8 +163,8 @@ class MainWindow(QMainWindow):
                 path += ".nnd"
             name = Path(path).stem
             self.project_manager.set_project_name(name)
-            self.project_manager.save_project(path, self.architecture_tab.graph)
-            self.status_bar.showMessage(f"Проект сохранен в файл: {path}")
+            self.project_manager.project_path = path
+            self._on_save_project()
 
     def _on_export(self, export_type: str):
         """Обработка экспорта (код, веса, проект)."""

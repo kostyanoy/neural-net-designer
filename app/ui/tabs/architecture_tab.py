@@ -157,3 +157,38 @@ class ArchitectureTab(QWidget):
     def _on_property_changed(self, prop_name: str, prop_value: object):
         """Обработка изменения свойства из панели"""
         self.project_manager.project_changed.emit()
+
+    def serialize_graph(self) -> dict:
+        """Сериализовать граф NodeGraphQt в формат проекта."""
+        data = self.graph.serialize_session()
+        return {
+            "nodes": data.get("nodes", []),
+            "connections": data.get("connections", [])
+        }
+
+    def deserialize_graph(self, data: dict):
+        """Восстановить граф из данных проекта."""
+        try:
+            self.graph.deserialize_session(data)
+        except Exception as e:
+            print(f"Error deserializing graph: {e}")
+
+    def validate_graph(self) -> dict:
+        """Валидация графа перед сохранением/обучением."""
+
+        errors = []
+        nodes = self.graph.all_nodes()
+        if len(nodes) == 0:
+            errors.append("Граф не содержит узлов")
+
+        for node in nodes:
+            has_input = len(node.inputs()) > 0
+            has_output = len(node.outputs()) > 0
+
+            is_input_unconnected = any(node.connected_input_nodes()) or not has_input
+            is_output_unconnected = any(node.connected_output_nodes()) or not has_output
+
+            if is_input_unconnected and is_output_unconnected and len(nodes) > 0:
+                errors.append(f"Блок {node.name()} не соединен с остальным графом")
+
+        return {"valid": len(errors) == 0, "errors": errors}

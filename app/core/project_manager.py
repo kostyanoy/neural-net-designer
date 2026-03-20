@@ -2,7 +2,6 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from NodeGraphQt import NodeGraph
 from PyQt5.QtCore import QObject, pyqtSignal
 
 from config import VERSION
@@ -38,28 +37,19 @@ class ProjectManager(QObject):
                 "modified": datetime.now().isoformat(),
                 "app_version": VERSION
             },
-            "architecture": {}
+            "architecture": {},
+            "training": {
+                "dataset_config": {},
+                "training_config": {}
+            }
         }
 
-    def serialize_graph(self, graph: NodeGraph) -> dict:
-        """Сериализовать граф NodeGraphQt в формат проекта."""
-        data = graph.serialize_session()
-        return {
-            "nodes": data.get("nodes", []),
-            "connections": data.get("connections", [])
-        }
-
-    def deserialize_graph(self, graph: NodeGraph, data: dict):
-        """Восстановить граф из данных проекта."""
-        try:
-            graph.deserialize_session(data["architecture"])
-        except Exception as e:
-            print(f"Error deserializing graph: {e}")
-
-    def save_project(self, path: str, graph: NodeGraph):
+    def save_project(self, path: str, architecture: dict, dataset_config: dict):
         """Сохранить проект в файл."""
-        self.current_project["architecture"] = self.serialize_graph(graph)
+        self.current_project["architecture"] = architecture
         self.current_project["metadata"]["modified"] = datetime.now().isoformat()
+        if dataset_config:
+            self.current_project["training"] = dataset_config
         self.project_changed.emit()
 
         Path(path).parent.mkdir(parents=True, exist_ok=True)
@@ -81,26 +71,6 @@ class ProjectManager(QObject):
             print(f"Error loading project: {e}")
             return {}
 
-    def validate_graph(self, graph: NodeGraph) -> dict:
-        """Валидация графа перед сохранением/обучением."""
-
-        errors = []
-        nodes = graph.all_nodes()
-        if len(nodes) == 0:
-            errors.append("Граф не содержит узлов")
-
-        for node in nodes:
-            has_input = len(node.inputs()) > 0
-            has_output = len(node.outputs()) > 0
-
-            is_input_unconnected = any(node.connected_input_nodes()) or not has_input
-            is_output_unconnected = any(node.connected_output_nodes()) or not has_output
-
-            if is_input_unconnected and is_output_unconnected and len(nodes) > 0:
-                errors.append(f"Блок {node.name()} не соединен с остальным графом")
-
-        return {"valid": len(errors) == 0, "errors": errors}
-
     def get_project_name(self) -> str:
         """Получить имя текущего проекта."""
         return self.current_project["metadata"]["name"]
@@ -109,7 +79,12 @@ class ProjectManager(QObject):
         """Установить имя текущего проекта"""
         self.current_project["metadata"]["name"] = name
 
-    def update_architecture_params(self, graph: NodeGraph):
+    def update_architecture_params(self, architecture: dict):
         """Обновить параметры архитектуры."""
-        self.current_project["architecture"] = self.serialize_graph(graph)
+        self.current_project["architecture"] = architecture
+        self.project_changed.emit()
+
+    def update_training_params(self, training: dict):
+        """Обновить параметры обучения."""
+        self.current_project["training"] = training
         self.project_changed.emit()
