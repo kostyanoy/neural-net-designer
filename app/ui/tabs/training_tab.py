@@ -27,12 +27,14 @@ class TrainingTab(QWidget):
         splitter.addWidget(self.data_widget)
         splitter.addWidget(self.training_widget)
 
+        splitter.setSizes([1000, 1000])
+
         layout.addWidget(splitter)
 
     def _connect_signals(self):
         """Подключение сигналов для синхронизации свойств"""
         self.data_widget.dataset_config_changed.connect(self._on_config_changed)
-        self.training_widget.config_changed.connect(self._on_config_changed)
+        self.training_widget.training_config_changed.connect(self._on_config_changed)
 
     def _on_config_changed(self):
         """Обновление проекта"""
