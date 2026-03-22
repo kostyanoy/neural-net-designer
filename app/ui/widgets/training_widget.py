@@ -121,8 +121,23 @@ class TrainingWidget(QWidget):
 
     def clear_session(self):
         """Сбросить параметры обучения к значениям по умолчанию"""
-        # TODO Сброс к стандартным значениям
-        pass
+        self.epochs_spin.setValue(10)
+        self.batch_combo.setCurrentText("32")
+        self.device_combo.setCurrentText("cuda" if self.cuda_available else "cpu")
+        self.shuffle_check.setChecked(True)
+        self.optimizer_combo.setCurrentText("Adam")
+        self.lr_spin.setValue(0.001)
+        self.wd_spin.setValue(0.0)
+        self.loss_combo.setCurrentText("CrossEntropyLoss")
+
+        for i in range(self.metrics_list.count()):
+            item = self.metrics_list.item(i)
+            if i == 0:
+                item.setCheckState(QtCore.Qt.CheckState.Checked)
+            else:
+                item.setCheckState(QtCore.Qt.CheckState.Unchecked)
+
+        self.training_config_changed.emit()
 
     def get_config(self) -> dict:
         """Сбор текущих настроек в словарь"""
