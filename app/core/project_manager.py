@@ -44,12 +44,12 @@ class ProjectManager(QObject):
             }
         }
 
-    def save_project(self, path: str, architecture: dict, dataset_config: dict):
+    def save_project(self, path: str, architecture: dict, training: dict):
         """Сохранить проект в файл."""
         self.current_project["architecture"] = architecture
         self.current_project["metadata"]["modified"] = datetime.now().isoformat()
-        if dataset_config:
-            self.current_project["training"] = dataset_config
+        if training:
+            self.current_project["training"] = training
         self.project_changed.emit()
 
         Path(path).parent.mkdir(parents=True, exist_ok=True)
