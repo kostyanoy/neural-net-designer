@@ -110,7 +110,6 @@ class TrainingWidget(QWidget):
     def _check_cuda(self):
         """Проверка доступности CUDA"""
         self.cuda_available = torch.cuda.is_available()
-        print(self.cuda_available)
         device_text = "cuda" if self.cuda_available else "cpu"
         self.device_combo.setCurrentText(device_text)
         self.device_combo.model().item(1).setEnabled(self.cuda_available)
