@@ -31,7 +31,7 @@ class DataWidget(QWidget):
 
         return dataset_group
 
-    def _create_dataset_group(self):
+    def _create_dataset_group(self) -> QGroupBox:
         dataset_group = QGroupBox("📊 Датасет")
         dataset_layout = QFormLayout()
         dataset_group.setLayout(dataset_layout)
@@ -60,7 +60,7 @@ class DataWidget(QWidget):
 
         return dataset_group
 
-    def _create_preprocessing_group(self):
+    def _create_preprocessing_group(self) -> QGroupBox:
         preprocess_group = QGroupBox("🔧 Препроцессинг")
         preprocess_layout = QFormLayout()
         preprocess_group.setLayout(preprocess_layout)
