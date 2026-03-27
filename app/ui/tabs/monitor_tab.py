@@ -3,7 +3,7 @@ import time
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget, QSplitter, QGroupBox, QHBoxLayout, QPushButton, QFormLayout, \
-    QProgressBar, QGridLayout, QTabWidget, QTextEdit, QTableWidget, QHeaderView, QTableWidgetItem
+    QProgressBar, QGridLayout, QTabWidget, QTextEdit, QTableWidget, QHeaderView, QTableWidgetItem, QSizePolicy
 from pyqtgraph import PlotWidget
 
 
@@ -43,6 +43,7 @@ class MonitorTab(QWidget):
 
         control_panel = self._create_control_panel()
         layout.addWidget(control_panel)
+        layout.setStretchFactor(control_panel, 0)
 
         charts_area = self._create_charts_area()
         logs_area = self._create_logs_area()
@@ -50,6 +51,7 @@ class MonitorTab(QWidget):
         splitter.addWidget(charts_area)
         splitter.addWidget(logs_area)
         layout.addWidget(splitter)
+        layout.setStretchFactor(splitter, 1)
 
     def _create_control_panel(self) -> QGroupBox:
         """Создание панели управления обучением."""
@@ -114,6 +116,9 @@ class MonitorTab(QWidget):
 
         layout.addWidget(self.loss_plot, 0, 0)
         layout.addWidget(self.acc_plot, 0, 1)
+
+        layout.setColumnStretch(0, 1)
+        layout.setColumnStretch(1, 1)
 
         return group
 
