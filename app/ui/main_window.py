@@ -282,6 +282,11 @@ class MainWindow(QMainWindow):
         self.left_dock.setVisible(is_architecture_tab)
         self.right_dock.setVisible(is_architecture_tab)
 
+        if is_monitor_tab:
+            training = self.training_tab.get_config()
+            metrics = training["training_config"]["metrics"]
+            self.monitor_tab.set_metrics_config(metrics)
+
     def _on_node_selected(self, node):
         """Обработка выбора узла на графе."""
         if node:

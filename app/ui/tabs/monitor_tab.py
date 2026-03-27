@@ -23,12 +23,17 @@ class MonitorTab(QWidget):
         self._pause_start_time = None
         self._is_training = False
         self._is_paused = False
+        self.selected_metrics = ["Accuracy"]
+
         self._init_ui()
         self._connect_signals()
 
         self.history = {
             "loss": {"x": [], "train": [], "test": []},
             "acc": {"x": [], "train": [], "test": []},
+            "precision": {"x": [], "test": []},
+            "recall": {"x": [], "test": []},
+            "f1": {"x": [], "test": []},
         }
 
     def _init_ui(self):
@@ -258,15 +263,31 @@ class MonitorTab(QWidget):
 
     def update_metrics(self, metrics: dict):
         """Обновление графиков и таблицы метрик."""
+        metric_values = []
+
         epoch = metrics.get("epoch", 0)
         loss = metrics.get("loss", 0)
         test_loss = metrics.get("test_loss", 0)
-        acc = metrics.get("accuracy", 0)
-        test_acc = metrics.get("test_accuracy", 0)
-
+        metric_values.extend([epoch, loss, test_loss])
         self._update_loss_plot(epoch, loss, test_loss)
-        self._update_acc_plot(epoch, acc, test_acc)
-        self._add_metrics_row(epoch, loss, test_loss, acc, test_acc)
+
+        if "Accuracy" in self.selected_metrics:
+            acc = metrics.get("accuracy", 0)
+            test_acc = metrics.get("test_accuracy", 0)
+            metric_values.extend([acc, test_acc])
+            self._update_acc_plot(epoch, acc, test_acc)
+
+        if "Precision" in self.selected_metrics:
+            precision = metrics.get("precision", 0)
+            metric_values.append(precision)
+        if "Recall" in self.selected_metrics:
+            recall = metrics.get("recall", 0)
+            metric_values.append(recall)
+        if "F1-Score" in self.selected_metrics:
+            f1 = metrics.get("f1-score", 0)
+            metric_values.append(f1)
+
+        self._add_metrics_row(metric_values)
 
     def _update_loss_plot(self, epoch: int, loss: float, test_loss: float):
         """Обновление графика Loss."""
@@ -289,18 +310,14 @@ class MonitorTab(QWidget):
         self.loss_plot_train.setData(self.history["acc"]["x"], self.history["acc"]["train"])
         self.loss_plot_test.setData(self.history["acc"]["x"], self.history["acc"]["test"])
 
-    def _add_metrics_row(self, epoch: int, loss: float, test_loss: float,
-                         acc: float, test_acc: float):
+    def _add_metrics_row(self, metric_values: list):
         """Добавление строки в таблицу метрик."""
         row = self.metrics_table.rowCount()
         self.metrics_table.insertRow(row)
 
-        self.metrics_table.setItem(row, 0, QTableWidgetItem(str(epoch)))
-        self.metrics_table.setItem(row, 1, QTableWidgetItem(f"{loss:.4f}"))
-        self.metrics_table.setItem(row, 2, QTableWidgetItem(f"{test_loss:.4f}"))
-        self.metrics_table.setItem(row, 3, QTableWidgetItem(f"{acc:.4f}"))
-        self.metrics_table.setItem(row, 4, QTableWidgetItem(f"{test_acc:.4f}"))
-
+        for i, metric in enumerate(self.selected_metrics):
+            metric_value = row[i]
+            self.metrics_table.setItem(row, i, QTableWidgetItem(f"{metric_value:.4f}"))
         self.metrics_table.scrollToBottom()
 
     def setup_metrics(self, metrics_list: list):
@@ -340,3 +357,38 @@ class MonitorTab(QWidget):
 
         self.metrics_table.setRowCount(0)
         self.log_console.clear()
+
+        self.history = {
+            "loss": {"x": [], "train": [], "test": []},
+            "acc": {"x": [], "train": [], "test": []},
+            "precision": {"x": [], "test": []},
+            "recall": {"x": [], "test": []},
+            "f1": {"x": [], "test": []},
+        }
+
+    def set_metrics_config(self, metrics: list):
+        """Установить конфигурацию отображаемых метрик"""
+        self.selected_metrics = metrics
+        self._reconfigure_ui()
+
+    def _reconfigure_ui(self):
+        """Перенастроить UI под выбранные метрики"""
+        has_accuracy = "Accuracy" in self.selected_metrics
+        self.acc_plot.setVisible(has_accuracy)
+
+        columns = ["Эпоха", "Loss", "Test Loss"]
+        if "Accuracy" in self.selected_metrics:
+            columns.extend(["Accuracy", "Test Accuracy"])
+        if "Precision" in self.selected_metrics:
+            columns.extend(["Test Precision"])
+        if "Recall" in self.selected_metrics:
+            columns.extend(["Test Recall"])
+        if "F1-Score" in self.selected_metrics:
+            columns.extend(["Test F1-Score"])
+
+        self.metrics_table.setColumnCount(len(columns))
+        self.metrics_table.setHorizontalHeaderLabels(columns)
+        self.metrics_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.metrics_table.setRowCount(0)
+
+
