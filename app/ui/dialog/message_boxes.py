@@ -42,3 +42,19 @@ def choose_dir_dataset(parent=None):
         parent,
         "Выберите папку с изображениями"
     )
+
+def choose_code_file(parent, name, types):
+    return QFileDialog.getSaveFileName(
+        parent,
+        "Сохранить код",
+        name,
+        types
+    )
+
+def choose_weights_file(parent=None):
+    return QFileDialog.getSaveFileName(
+            parent,
+            "Сохранить веса модели",
+            "model_weights.pth",
+            "PyTorch Weights (*.pth);;ONNX Model (*.onnx);;All Files (*)"
+        )
