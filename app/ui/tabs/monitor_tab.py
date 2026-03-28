@@ -312,8 +312,8 @@ class MonitorTab(QWidget):
         self.history["acc"]["train"].append(acc)
         self.history["acc"]["test"].append(test_acc)
 
-        self.loss_plot_train.setData(self.history["acc"]["x"], self.history["acc"]["train"])
-        self.loss_plot_test.setData(self.history["acc"]["x"], self.history["acc"]["test"])
+        self.acc_plot_train.setData(self.history["acc"]["x"], self.history["acc"]["train"])
+        self.acc_plot_test.setData(self.history["acc"]["x"], self.history["acc"]["test"])
 
     def _add_metrics_row(self, metric_values: list):
         """Добавление строки в таблицу метрик."""
@@ -321,7 +321,7 @@ class MonitorTab(QWidget):
         self.metrics_table.insertRow(row)
 
         for i, metric in enumerate(self.selected_metrics):
-            metric_value = row[i]
+            metric_value = metric_values[i]
             self.metrics_table.setItem(row, i, QTableWidgetItem(f"{metric_value:.4f}"))
         self.metrics_table.scrollToBottom()
 

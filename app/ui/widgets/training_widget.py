@@ -167,7 +167,7 @@ class TrainingWidget(QWidget):
         self.batch_combo.setCurrentText(str(config.get("batch_size", 32)))
         self.device_combo.setCurrentText(config.get("device", "cpu"))
         self.shuffle_check.setChecked(config.get("shuffle", True))
-        self.optimizer_combo.setCurrentText(config.get("optimizer", "adam"))
+        self.optimizer_combo.setCurrentText(config.get("optimizer", "Adam"))
         self.lr_spin.setValue(config.get("learning_rate", 0.001))
         self.wd_spin.setValue(config.get("weight_decay", 0.0))
         self.loss_combo.setCurrentText(config.get("loss_function", "CrossEntropyLoss"))

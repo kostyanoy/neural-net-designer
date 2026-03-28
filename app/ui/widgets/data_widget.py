@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QFormLayout, QLabel, QPushButton, QComboBox, QHBoxLayout, \
@@ -127,7 +129,7 @@ class DataWidget(QWidget):
         if path:
             self._current_dataset_path = path
             self._current_dataset_type = "custom_file"
-            filename = path.split('/')[-1].split('\\')[-1]
+            filename = Path(path).name
             self.dataset_label.setText(f"Файл: {filename}")
             self._on_change()
 
@@ -138,7 +140,7 @@ class DataWidget(QWidget):
         if path:
             self._current_dataset_path = path
             self._current_dataset_type = "custom_folder"
-            foldername = path.split('/')[-1].split('\\')[-1]
+            foldername = Path(path).name
             self.dataset_label.setText(f"Папка: {foldername}")
             self._on_change()
 
