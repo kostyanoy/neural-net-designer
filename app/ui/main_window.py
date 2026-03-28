@@ -103,6 +103,10 @@ class MainWindow(QMainWindow):
         # --- Architecture Tab ---
         self.architecture_tab.graph.node_selected.connect(self._on_node_selected)
 
+        # --- Export Tab ---
+        self.export_tab.generate_code_requested.connect(self._on_generate_code)
+        self.export_tab.export_weights_requested.connect(self._on_export_weights)
+
         # --- Project Manager ---
         self.project_manager.project_loaded.connect(self._on_project_loaded)
         self.project_manager.project_saved.connect(self._on_project_saved)
@@ -293,6 +297,17 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage(f"Selected Node: {node.name()}")
         else:
             self.status_bar.showMessage("No node selected")
+
+    def _on_generate_code(self, code_type: str):
+        """Генерация кода по типу."""
+        # TODO: Вызов генератора кода по шаблонам Jinja2
+        print(f"Generating code for: {code_type}")
+        # self.export_tab.set_generated_code(code_type, generated_code)
+
+    def _on_export_weights(self, path: str):
+        """Экспорт весов модели."""
+        # TODO: Сохранение state_dict модели
+        print(f"Exporting weights to: {path}")
 
     def _on_project_loaded(self, project_data: dict):
         """Обработка загрузки проекта."""
