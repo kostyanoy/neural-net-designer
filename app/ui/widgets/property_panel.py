@@ -1,6 +1,6 @@
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox, QSlider, \
-    QHBoxLayout
+    QHBoxLayout, QLineEdit
 
 from core.nodes.base_node import MyBaseNode, PropertyType
 
@@ -77,6 +77,8 @@ class PropertyPanel(QWidget):
         label_widget = QLabel(label)
         layout.addWidget(label_widget)
 
+        print(prop_name, prop_def)
+
         if ptype == PropertyType.INT:
             widget = QSpinBox()
             widget.setRange(prop_def["min"], prop_def["max"])
@@ -85,6 +87,11 @@ class PropertyPanel(QWidget):
             widget = QDoubleSpinBox()
             widget.setRange(prop_def["min"], prop_def["max"])
             widget.valueChanged.connect(lambda v: self._on_property_changed(prop_name, v))
+        elif ptype == PropertyType.TEXT:
+            print("TEXT")
+            widget = QLineEdit()
+            widget.setPlaceholderText(prop_def["placeholder"])
+            widget.textChanged.connect(lambda v: self._on_property_changed(prop_name, v))
         elif ptype == PropertyType.COMBO:
             widget = QComboBox()
             widget.addItems(prop_def["options"])
@@ -131,6 +138,8 @@ class PropertyPanel(QWidget):
             widget.setValue(int(value))
         elif ptype == PropertyType.FLOAT:
             widget.setValue(float(value))
+        elif ptype == PropertyType.TEXT:
+            widget.setText(value)
         elif ptype == PropertyType.COMBO:
             widget.setCurrentText(value)
         elif ptype == PropertyType.CHECKBOX:

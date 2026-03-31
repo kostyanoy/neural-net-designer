@@ -3,7 +3,6 @@ from core.nodes.base_node import MyBaseNode, PropertyType
 
 class DenseNode(MyBaseNode):
     NODE_NAME = 'Dense'
-
     PROPERTY_SCHEMA = {
         "units": {
             "type": PropertyType.INT,
@@ -11,12 +10,6 @@ class DenseNode(MyBaseNode):
             "default": 64,
             "min": 1,
             "max": 10000
-        },
-        "activation": {
-            "type": PropertyType.COMBO,
-            "label": "Активация:",
-            "default": "relu",
-            "options": ["relu", "sigmoid", "tanh", "softmax", "linear"]
         },
         "use_bias": {
             "type": PropertyType.CHECKBOX,

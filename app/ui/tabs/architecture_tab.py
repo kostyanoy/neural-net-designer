@@ -4,6 +4,7 @@ from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QLineEdit, QListWidget, QAbstractItemView, \
     QListWidgetItem
 
+from core.nodes import ActivationNode, FlattenNode, InputNode, OutputNode
 from core.nodes.base_node import MyBaseNode
 from core.nodes.dense_node import DenseNode
 from core.project_manager import ProjectManager
@@ -68,7 +69,11 @@ class ArchitectureTab(QWidget):
 
         # TODO from config
         blocks = [
+            {"name": "Input", "id": "neural_net.InputNode", "icon": "🟢"},
             {"name": "Dense", "id": "neural_net.DenseNode", "icon": "🔷"},
+            {"name": "Activation", "id": "neural_net.ActivationNode", "icon": "🟣"},
+            {"name": "Flatten", "id": "neural_net.FlattenNode", "icon": "🟠"},
+            {"name": "Output", "id": "neural_net.OutputNode", "icon": "🔴"},
         ]
 
         for block in blocks:
@@ -111,7 +116,11 @@ class ArchitectureTab(QWidget):
 
     def _register_nodes(self):
         """Регистрация узлов в NodeGraph."""
+        self.graph.register_node(ActivationNode)
         self.graph.register_node(DenseNode)
+        self.graph.register_node(FlattenNode)
+        self.graph.register_node(InputNode)
+        self.graph.register_node(OutputNode)
 
     def _filter_blocks(self, text):
         """Фильтрация списка блоков по поиску."""

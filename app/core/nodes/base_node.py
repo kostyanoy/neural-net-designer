@@ -7,7 +7,7 @@ class PropertyType(Enum):
     """Перечисление поддерживаемых типов данных для свойств узлов."""
     INT = "int"
     FLOAT = "float"
-    # TEXT = "text"
+    TEXT = "text"
     COMBO = "combo"
     CHECKBOX = "checkbox"
     SLIDER = "slider"
