@@ -1,15 +1,15 @@
-from core.nodes.base_node import MyBaseNode, PropertyType
+from core.nodes.base_node import MyBaseNode
+from core.nodes.properties import ComboProperty
 
 
 class ActivationNode(MyBaseNode):
     NODE_NAME = "Activation"
     PROPERTY_SCHEMA = {
-        "function": {
-            "type": PropertyType.COMBO,
-            "label": "Функция активации:",
-            "default": "relu",
-            "options": ["relu", "sigmoid", "tanh", "softmax"]
-        }
+        "function": ComboProperty(
+            label="Функция активации:",
+            default="relu",
+            options=["relu", "sigmoid", "tanh", "softmax"],
+        )
     }
 
     def _init_ports(self):

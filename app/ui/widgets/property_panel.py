@@ -1,8 +1,12 @@
+from typing import cast
+
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox, QSlider, \
     QHBoxLayout, QLineEdit
 
-from core.nodes.base_node import MyBaseNode, PropertyType
+from core.nodes.base_node import MyBaseNode
+from core.nodes.properties import IntProperty, FloatProperty, TextProperty, ComboProperty, \
+    CheckboxProperty, SliderProperty, Property
 
 
 class PropertyPanel(QWidget):
@@ -65,10 +69,9 @@ class PropertyPanel(QWidget):
             cur_value = node.get_property(prop_name)
             self._set_widget_value(widget, prop_name, prop_def, cur_value)
 
-    def _create_property_widget(self, prop_name: str, prop_def: dict):
+    def _create_property_widget(self, prop_name: str, prop_def: Property):
         """Создать UI элемент для свойства"""
-        ptype = prop_def["type"]
-        label = prop_def["label"]
+        label = prop_def.label
 
         container = QWidget()
         layout = QVBoxLayout()
@@ -77,32 +80,29 @@ class PropertyPanel(QWidget):
         label_widget = QLabel(label)
         layout.addWidget(label_widget)
 
-        print(prop_name, prop_def)
-
-        if ptype == PropertyType.INT:
+        if isinstance(prop_def, IntProperty):
             widget = QSpinBox()
-            widget.setRange(prop_def["min"], prop_def["max"])
+            widget.setRange(prop_def.min_value, prop_def.max_value)
             widget.valueChanged.connect(lambda v: self._on_property_changed(prop_name, v))
-        elif ptype == PropertyType.FLOAT:
+        elif isinstance(prop_def, FloatProperty):
             widget = QDoubleSpinBox()
-            widget.setRange(prop_def["min"], prop_def["max"])
+            widget.setRange(prop_def.min_value, prop_def.max_value)
             widget.valueChanged.connect(lambda v: self._on_property_changed(prop_name, v))
-        elif ptype == PropertyType.TEXT:
-            print("TEXT")
+        elif isinstance(prop_def, TextProperty):
             widget = QLineEdit()
-            widget.setPlaceholderText(prop_def["placeholder"])
+            widget.setPlaceholderText(prop_def.placeholder)
             widget.textChanged.connect(lambda v: self._on_property_changed(prop_name, v))
-        elif ptype == PropertyType.COMBO:
+        elif isinstance(prop_def, ComboProperty):
             widget = QComboBox()
-            widget.addItems(prop_def["options"])
+            widget.addItems(prop_def.options)
             widget.currentTextChanged.connect(lambda v: self._on_property_changed(prop_name, v))
-        elif ptype == PropertyType.CHECKBOX:
+        elif isinstance(prop_def, CheckboxProperty):
             widget = QCheckBox()
             widget.stateChanged.connect(lambda v: self._on_property_changed(prop_name, v == 2))
-        elif ptype == PropertyType.SLIDER:
-            _min = prop_def["min"]
-            _max = prop_def["max"]
-            _step = prop_def["step"]
+        elif type(prop_def) == SliderProperty:
+            _min = prop_def.min_value
+            _max = prop_def.max_value
+            _step = prop_def.step
 
             widget = QSlider()
             widget.setOrientation(Qt.Orientation.Horizontal)
@@ -111,7 +111,7 @@ class PropertyPanel(QWidget):
             values_layout = QHBoxLayout()
             min_label = QLabel(f"{_min}")
             min_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
-            value_label = QLabel(f"{prop_def['default']}")
+            value_label = QLabel(f"{prop_def.default}")
             value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             max_label = QLabel(f"{_max}")
             max_label.setAlignment(Qt.AlignmentFlag.AlignRight)
@@ -125,34 +125,38 @@ class PropertyPanel(QWidget):
 
             widget.valueChanged.connect(lambda v: self._on_property_changed(prop_name, v * _step))
             self.property_containers[f"{prop_name}_value"] = value_label
+
         else:
             return None, None
+
 
         layout.addWidget(widget)
         return container, widget
 
-    def _set_widget_value(self, widget: QWidget, prop_name, prop_def: dict, value):
+
+    def _set_widget_value(self, widget: QWidget, prop_name, prop_def: Property, value):
         """Установить значение в виджет"""
-        ptype = prop_def["type"]
-        if ptype == PropertyType.INT:
+        if isinstance(prop_def, IntProperty):
             widget.setValue(int(value))
-        elif ptype == PropertyType.FLOAT:
+        elif isinstance(prop_def, FloatProperty):
             widget.setValue(float(value))
-        elif ptype == PropertyType.TEXT:
+        elif isinstance(prop_def, TextProperty):
             widget.setText(value)
-        elif ptype == PropertyType.COMBO:
+        elif isinstance(prop_def, ComboProperty):
             widget.setCurrentText(value)
-        elif ptype == PropertyType.CHECKBOX:
+        elif isinstance(prop_def, CheckboxProperty):
             widget.setChecked(bool(value))
-        elif ptype == PropertyType.SLIDER:
+        elif isinstance(prop_def, SliderProperty):
             widget.setValue(int(value / prop_def["step"]))
             self.property_containers[f"{prop_name}_value"].setText(str(round(value, 4)))
+
 
     def _on_property_changed(self, prop_name: str, value):
         """Обработка изменения свойства"""
         if self.current_node:
             self.current_node.set_property(prop_name, value)
             self.property_changed.emit(prop_name, value)
+
 
     def update_property_value(self, prop_name, value):
         """Обновить значение виджета при внешнем изменении"""

@@ -1,29 +1,20 @@
-from core.nodes.base_node import MyBaseNode, PropertyType
+from core.nodes.base_node import MyBaseNode
+from core.nodes.properties import IntProperty, CheckboxProperty
 
 
 class DenseNode(MyBaseNode):
     NODE_NAME = 'Dense'
     PROPERTY_SCHEMA = {
-        "units": {
-            "type": PropertyType.INT,
-            "label": "Нейроны:",
-            "default": 64,
-            "min": 1,
-            "max": 10000
-        },
-        "use_bias": {
-            "type": PropertyType.CHECKBOX,
-            "label": "Bias:",
-            "default": True
-        },
-        "dropout": {
-            "type": PropertyType.SLIDER,
-            "label": "Dropout:",
-            "default": 0.0,
-            "min": 0.0,
-            "max": 0.9,
-            "step": 0.1,
-        }
+        "units": IntProperty(
+            label="Нейроны:",
+            default=64,
+            min_value=1,
+            max_value=10000
+        ),
+        "use_bias": CheckboxProperty(
+            label="Bias:",
+            default=True
+        )
     }
 
     def _init_ports(self):
