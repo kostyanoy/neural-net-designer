@@ -102,6 +102,7 @@ class MainWindow(QMainWindow):
 
         # --- Architecture Tab ---
         self.architecture_tab.graph.node_selected.connect(self._on_node_selected)
+        self.architecture_tab.user_error.connect(self._on_user_error)
 
         # --- Export Tab ---
         self.export_tab.generate_code_requested.connect(self._on_generate_code)
@@ -114,6 +115,9 @@ class MainWindow(QMainWindow):
 
     def _init_project(self):
         self.project_manager.create_new_project()
+
+    def _on_user_error(self, message: str):
+        self.status_bar.showMessage(message)
 
     # --- Слоты: File ---
 

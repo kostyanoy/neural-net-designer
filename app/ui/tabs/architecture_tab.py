@@ -1,8 +1,11 @@
+from typing import Optional
+
 from NodeGraphQt import NodeGraph
 from PyQt5 import QtCore
-from PyQt5.QtCore import QEvent
+from PyQt5.QtCore import QEvent, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QLineEdit, QListWidget, QAbstractItemView, \
     QListWidgetItem
+from torch import nn
 
 from core.compiler import GraphCompiler
 from core.nodes import ActivationNode, FlattenNode, InputNode, OutputNode
@@ -15,6 +18,7 @@ from ui.widgets.property_panel import PropertyPanel
 
 class ArchitectureTab(QWidget):
     """Вкладка для визуального проектирования архитектуры нейросети."""
+    user_error = pyqtSignal(str)
 
     def __init__(self, parent, project_manager: ProjectManager):
         super().__init__(parent)
@@ -22,7 +26,9 @@ class ArchitectureTab(QWidget):
         self._register_nodes()
         self._connect_signals()
 
-        self.project_manager = project_manager
+        self._project_manager = project_manager
+        self._graph_compiler = GraphCompiler()
+        self._compiled_model = None
 
         self.graph.create_node("neural_net.DenseNode")
 
@@ -167,7 +173,7 @@ class ArchitectureTab(QWidget):
 
     def _on_property_changed(self, prop_name: str, prop_value: object):
         """Обработка изменения свойства из панели"""
-        self.project_manager.project_changed.emit()
+        self._project_manager.project_changed.emit()
 
     def serialize_graph(self) -> dict:
         """Сериализовать граф NodeGraphQt в формат проекта."""
@@ -184,22 +190,10 @@ class ArchitectureTab(QWidget):
         except Exception as e:
             print(f"Error deserializing graph: {e}")
 
-    # def validate_graph(self) -> dict:
-    #     """Валидация графа перед сохранением/обучением."""
-    #
-    #     errors = []
-    #     nodes = self.graph.all_nodes()
-    #     if len(nodes) == 0:
-    #         errors.append("Граф не содержит узлов")
-    #
-    #     for node in nodes:
-    #         has_input = len(node.inputs()) > 0
-    #         has_output = len(node.outputs()) > 0
-    #
-    #         is_input_unconnected = any(node.connected_input_nodes()) or not has_input
-    #         is_output_unconnected = any(node.connected_output_nodes()) or not has_output
-    #
-    #         if is_input_unconnected and is_output_unconnected and len(nodes) > 0:
-    #             errors.append(f"Блок {node.name()} не соединен с остальным графом")
-    #
-    #     return {"valid": len(errors) == 0, "errors": errors}
+    def get_model(self) -> Optional[nn.Module]:
+        is_valid = self._graph_compiler.validate_graph(self.graph)
+        if not is_valid["is_valid"]:
+            self.user_error.emit(is_valid["error"])
+            return None
+        self._compiled_model = self._graph_compiler.compile(self.graph)
+        return self._compiled_model

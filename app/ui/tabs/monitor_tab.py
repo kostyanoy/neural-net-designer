@@ -23,7 +23,7 @@ class MonitorTab(QWidget):
         self._pause_start_time = None
         self._is_training = False
         self._is_paused = False
-        self.selected_metrics = ["Accuracy"]
+        self._selected_metrics = ["Accuracy"]
 
         self._init_ui()
         self._connect_signals()
@@ -276,19 +276,19 @@ class MonitorTab(QWidget):
         metric_values.extend([epoch, loss, test_loss])
         self._update_loss_plot(epoch, loss, test_loss)
 
-        if "Accuracy" in self.selected_metrics:
+        if "Accuracy" in self._selected_metrics:
             acc = metrics.get("accuracy", 0)
             test_acc = metrics.get("test_accuracy", 0)
             metric_values.extend([acc, test_acc])
             self._update_acc_plot(epoch, acc, test_acc)
 
-        if "Precision" in self.selected_metrics:
+        if "Precision" in self._selected_metrics:
             precision = metrics.get("precision", 0)
             metric_values.append(precision)
-        if "Recall" in self.selected_metrics:
+        if "Recall" in self._selected_metrics:
             recall = metrics.get("recall", 0)
             metric_values.append(recall)
-        if "F1-Score" in self.selected_metrics:
+        if "F1-Score" in self._selected_metrics:
             f1 = metrics.get("f1-score", 0)
             metric_values.append(f1)
 
@@ -320,7 +320,7 @@ class MonitorTab(QWidget):
         row = self.metrics_table.rowCount()
         self.metrics_table.insertRow(row)
 
-        for i, metric in enumerate(self.selected_metrics):
+        for i, metric in enumerate(self._selected_metrics):
             metric_value = metric_values[i]
             self.metrics_table.setItem(row, i, QTableWidgetItem(f"{metric_value:.4f}"))
         self.metrics_table.scrollToBottom()
@@ -373,22 +373,22 @@ class MonitorTab(QWidget):
 
     def set_metrics_config(self, metrics: list):
         """Установить конфигурацию отображаемых метрик"""
-        self.selected_metrics = metrics
+        self._selected_metrics = metrics
         self._reconfigure_ui()
 
     def _reconfigure_ui(self):
         """Перенастроить UI под выбранные метрики"""
-        has_accuracy = "Accuracy" in self.selected_metrics
+        has_accuracy = "Accuracy" in self._selected_metrics
         self.acc_plot.setVisible(has_accuracy)
 
         columns = ["Эпоха", "Loss", "Test Loss"]
-        if "Accuracy" in self.selected_metrics:
+        if "Accuracy" in self._selected_metrics:
             columns.extend(["Accuracy", "Test Accuracy"])
-        if "Precision" in self.selected_metrics:
+        if "Precision" in self._selected_metrics:
             columns.extend(["Test Precision"])
-        if "Recall" in self.selected_metrics:
+        if "Recall" in self._selected_metrics:
             columns.extend(["Test Recall"])
-        if "F1-Score" in self.selected_metrics:
+        if "F1-Score" in self._selected_metrics:
             columns.extend(["Test F1-Score"])
 
         self.metrics_table.setColumnCount(len(columns))

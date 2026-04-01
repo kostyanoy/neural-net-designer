@@ -30,8 +30,8 @@ class GraphCompiler:
     def compile(self, graph: NodeGraph):
         """Компиляция графа в nn.Module для обучения."""
         nodes: List[MyBaseNode] = graph.all_nodes()
-        connections = self._get_all_connections(nodes)
-        self._execution_order = self._topological_sort(nodes, connections)
+        self._connections = self._get_all_connections(nodes)
+        self._execution_order = self._topological_sort(nodes, self._connections)
 
         self._layers = {}
         for node_name in self._execution_order:
@@ -71,7 +71,7 @@ class GraphCompiler:
                 if in_degree[neighbor] == 0:
                     queue.append(neighbor)
 
-            assert len(result) != len(node_names), "Обнаружен цикл в графе"
+        assert len(result) == len(node_names), f"Обнаружен цикл в графе: количество узлов {len(node_names)} не равно полученному алгоритмом {len(result)}"
         return result
 
     def _create_layer(self, node: MyBaseNode):
