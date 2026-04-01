@@ -6,6 +6,7 @@ from core.nodes.properties import Property
 class MyBaseNode(BaseNode):
     """Базовый класс для пользовательских узлов в графе нейронной сети."""
     __identifier__ = 'neural_net'
+    NODE_NAME = 'Base'
 
     # Переопределяется в наследниках
     PROPERTY_SCHEMA: dict[str, Property] = {}
@@ -14,6 +15,8 @@ class MyBaseNode(BaseNode):
         super().__init__()
         self._init_ports()
         self._init_properties()
+
+        self.node_type = self.NODE_NAME
 
     def _init_properties(self):
         """Инициализирует свойства БЕЗ UI виджетов в узле"""

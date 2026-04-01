@@ -4,6 +4,7 @@ from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QLineEdit, QListWidget, QAbstractItemView, \
     QListWidgetItem
 
+from core.compiler import GraphCompiler
 from core.nodes import ActivationNode, FlattenNode, InputNode, OutputNode
 from core.nodes.base_node import MyBaseNode
 from core.nodes.dense_node import DenseNode
@@ -141,6 +142,7 @@ class ArchitectureTab(QWidget):
                 node_id = raw_data.data().decode('utf-8')
                 scene_pos = self.graph_view.mapToScene(event.pos())
                 self.graph.create_node(node_id, pos=(scene_pos.x(), scene_pos.y()))
+                print(GraphCompiler._get_all_connections(self.graph.all_nodes()))
                 event.acceptProposedAction()
                 return True
 
@@ -182,22 +184,22 @@ class ArchitectureTab(QWidget):
         except Exception as e:
             print(f"Error deserializing graph: {e}")
 
-    def validate_graph(self) -> dict:
-        """Валидация графа перед сохранением/обучением."""
-
-        errors = []
-        nodes = self.graph.all_nodes()
-        if len(nodes) == 0:
-            errors.append("Граф не содержит узлов")
-
-        for node in nodes:
-            has_input = len(node.inputs()) > 0
-            has_output = len(node.outputs()) > 0
-
-            is_input_unconnected = any(node.connected_input_nodes()) or not has_input
-            is_output_unconnected = any(node.connected_output_nodes()) or not has_output
-
-            if is_input_unconnected and is_output_unconnected and len(nodes) > 0:
-                errors.append(f"Блок {node.name()} не соединен с остальным графом")
-
-        return {"valid": len(errors) == 0, "errors": errors}
+    # def validate_graph(self) -> dict:
+    #     """Валидация графа перед сохранением/обучением."""
+    #
+    #     errors = []
+    #     nodes = self.graph.all_nodes()
+    #     if len(nodes) == 0:
+    #         errors.append("Граф не содержит узлов")
+    #
+    #     for node in nodes:
+    #         has_input = len(node.inputs()) > 0
+    #         has_output = len(node.outputs()) > 0
+    #
+    #         is_input_unconnected = any(node.connected_input_nodes()) or not has_input
+    #         is_output_unconnected = any(node.connected_output_nodes()) or not has_output
+    #
+    #         if is_input_unconnected and is_output_unconnected and len(nodes) > 0:
+    #             errors.append(f"Блок {node.name()} не соединен с остальным графом")
+    #
+    #     return {"valid": len(errors) == 0, "errors": errors}
