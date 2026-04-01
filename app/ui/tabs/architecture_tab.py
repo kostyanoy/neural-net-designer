@@ -148,7 +148,6 @@ class ArchitectureTab(QWidget):
                 node_id = raw_data.data().decode('utf-8')
                 scene_pos = self.graph_view.mapToScene(event.pos())
                 self.graph.create_node(node_id, pos=(scene_pos.x(), scene_pos.y()))
-                print(GraphCompiler._get_all_connections(self.graph.all_nodes()))
                 event.acceptProposedAction()
                 return True
 
