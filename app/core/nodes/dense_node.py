@@ -18,5 +18,5 @@ class DenseNode(MyBaseNode):
     }
 
     def _init_ports(self):
-        self.add_input('input')
-        self.add_output('output')
+        self.add_input_port('input')
+        self.add_output_port('output')

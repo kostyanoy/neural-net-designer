@@ -5,6 +5,6 @@ class SplitNode(MyBaseNode):
     NODE_NAME = "Split"
 
     def _init_ports(self):
-        self.add_input('input')
-        self.add_output('output_0')
-        self.add_output('output_1')
+        self.add_input_port('input')
+        self.add_output_port('output_0')
+        self.add_output_port('output_1')

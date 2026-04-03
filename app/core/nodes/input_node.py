@@ -13,4 +13,4 @@ class InputNode(MyBaseNode):
     }
 
     def _init_ports(self):
-        self.add_output("output")
+        self.add_output_port("output")

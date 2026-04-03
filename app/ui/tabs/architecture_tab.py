@@ -4,7 +4,7 @@ from NodeGraphQt import NodeGraph
 from PyQt5 import QtCore
 from PyQt5.QtCore import QEvent, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QLineEdit, QListWidget, QAbstractItemView, \
-    QListWidgetItem
+    QListWidgetItem, QPushButton
 from torch import nn
 
 from core.compiler import GraphCompiler
@@ -50,6 +50,10 @@ class ArchitectureTab(QWidget):
         container = QWidget()
         layout = QVBoxLayout()
         container.setLayout(layout)
+
+        self.validate_btn = QPushButton("Валидировать граф")
+        self.validate_btn.clicked.connect(self._on_validate_graph)
+        layout.addWidget(self.validate_btn)
 
         # Поле поиска
         # TODO
@@ -157,6 +161,14 @@ class ArchitectureTab(QWidget):
 
         return super().eventFilter(source, event)
 
+    def _on_validate_graph(self):
+        """Проверка графа на корректность"""
+        validation_result = self._graph_compiler.validate_graph(self.graph)
+        if validation_result["is_valid"]:
+            self.user_error.emit("✅ Граф валиден!")
+        else:
+            self.user_error.emit(validation_result["error"])
+
     def _connect_signals(self):
         """Подключение сигналов для синхронизации свойств"""
         self.graph.node_selection_changed.connect(self._on_nodes_selected)
@@ -194,9 +206,9 @@ class ArchitectureTab(QWidget):
             print(f"Error deserializing graph: {e}")
 
     def get_model(self) -> Optional[nn.Module]:
-        is_valid = self._graph_compiler.validate_graph(self.graph)
-        if not is_valid["is_valid"]:
-            self.user_error.emit(is_valid["error"])
+        validation_result = self._graph_compiler.validate_graph(self.graph)
+        if not validation_result["is_valid"]:
+            self.user_error.emit(validation_result["error"])
             return None
         self._compiled_model = self._graph_compiler.compile(self.graph)
         return self._compiled_model

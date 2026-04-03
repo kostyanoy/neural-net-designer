@@ -13,6 +13,6 @@ class MergeNode(MyBaseNode):
     }
 
     def _init_ports(self):
-        self.add_input("input_0")
-        self.add_input("input_1")
-        self.add_output("output")
+        self.add_input_port("input_0")
+        self.add_input_port("input_1")
+        self.add_output_port("output")

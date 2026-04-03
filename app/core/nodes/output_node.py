@@ -5,4 +5,4 @@ class OutputNode(MyBaseNode):
     NODE_NAME = "Output"
 
     def _init_ports(self):
-        self.add_input("input")
+        self.add_input_port("input")

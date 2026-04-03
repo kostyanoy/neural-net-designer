@@ -50,7 +50,18 @@ class GraphCompiler:
         )
         return model
 
-    def _topological_sort(self, nodes: List, connections: List) -> List[str]:
+    def _create_layer(self, node: MyBaseNode):
+        """Создание PyTorch слоя на основе типа узла."""
+        node_type = node.node_type
+        factory = self.LAYER_FACTORIES[node_type]
+
+        if factory is None:
+            print(f"Неизвестный узел: {node_type}. Используем Identity")
+            return nn.Identity()
+        return factory(node)
+
+    @staticmethod
+    def _topological_sort(nodes: List, connections: List) -> List[str]:
         """Сортировка узлов в порядке выполнения (от Input к Output) по алгоритму Кана"""
         node_names = [node.name() for node in nodes]
         in_degree = {node_name: 0 for node_name in node_names}
@@ -76,16 +87,6 @@ class GraphCompiler:
         assert len(result) == len(
             node_names), f"Обнаружен цикл в графе: количество узлов {len(node_names)} не равно полученному алгоритмом {len(result)}"
         return result
-
-    def _create_layer(self, node: MyBaseNode):
-        """Создание PyTorch слоя на основе типа узла."""
-        node_type = node.node_type
-        factory = self.LAYER_FACTORIES[node_type]
-
-        if factory is None:
-            print(f"Неизвестный узел: {node_type}. Используем Identity")
-            return nn.Identity()
-        return factory(node)
 
     @staticmethod
     def _find_node_by_name(nodes: List[MyBaseNode], node_name: str):
@@ -114,17 +115,87 @@ class GraphCompiler:
     def validate_graph(graph: NodeGraph):
         """Проверяет граф на корректность"""
         nodes: List[MyBaseNode] = graph.all_nodes()
-        node_types = [node.node_type for node in nodes]
 
         if len(nodes) == 0:
             return {"is_valid": False, "error": "Граф не содержит узлов"}
 
-        if "Input" not in node_types:
-            return {"is_valid": False, "error": "Нет входного слоя"}
-        if "Output" not in node_types:
-            return {"is_valid": False, "error": "Нет выходного слоя"}
+        input_nodes = [n for n in nodes if n.node_type == "Input"]
+        output_nodes = [n for n in nodes if n.node_type == "Output"]
+
+        if len(input_nodes) == 0:
+            return {"is_valid": False, "error": "Нет входного слоя (Input)"}
+        elif len(input_nodes) > 1:
+            return {"is_valid": False, "error": f"Слишком много входных слоёв: {len(input_nodes)} (должен быть 1)"}
+
+        if len(output_nodes) == 0:
+            return {"is_valid": False, "error": "Нет выходного слоя (Output)"}
+        elif len(output_nodes) > 1:
+            return {"is_valid": False, "error": f"Слишком много выходных слоёв: {len(output_nodes)} (должен быть 1)"}
+
+        connectivity_result = GraphCompiler._check_connectivity(nodes)
+        if not connectivity_result["is_connected"]:
+            return {"is_valid": False,
+                    "error": f"Граф несвязный: {connectivity_result['unconnected_nodes']} узлов изолированы"}
+
+        port_result = GraphCompiler._check_unused_ports(nodes)
+        if port_result["unused_inputs"]:
+            return {"is_valid": False,
+                    "error": f"Не подключены входные порты: {', '.join(port_result['unused_inputs'])}"}
+        if port_result["unused_outputs"]:
+            return {"is_valid": False,
+                    "error": f"Не подключены выходные порты: {', '.join(port_result['unused_outputs'])}"}
+
+        connections = GraphCompiler._get_all_connections(nodes)
+        try:
+            GraphCompiler._topological_sort(nodes, connections)
+        except AssertionError as e:
+            return {"is_valid": False, "error": "Обнаружен цикл в графе"}
 
         return {"is_valid": True, "error": ""}
+
+    @staticmethod
+    def _check_connectivity(nodes: List[MyBaseNode]) -> Dict:
+        """Проверяет, что все узлы принадлежат одному связному графу с помощью BFS"""
+        if len(nodes) <= 1:
+            return {"is_connected": True, "unconnected_nodes": 0}
+
+        adjacency = {node.name(): set() for node in nodes}
+        for node in nodes:
+            for input_port in node.input_ports():
+                for connected_port in input_port.connected_ports():
+                    from_node = connected_port.node().name()
+                    to_node = node.name()
+                    adjacency[from_node].add(to_node)
+                    adjacency[to_node].add(from_node)
+
+        start_node = nodes[0].name()
+        visited = {start_node}
+        queue = [start_node]
+        while queue:
+            current_node = queue.pop(0)
+            for neighbor in adjacency[current_node]:
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append(neighbor)
+
+        unconnected_nodes = len(nodes) - len(visited)
+        return {"is_connected": unconnected_nodes == 0, "unconnected_nodes": unconnected_nodes}
+
+    @staticmethod
+    def _check_unused_ports(nodes: List[MyBaseNode]) -> Dict:
+        """Проверяет наличие неподключённых портов"""
+        unused_inputs = []
+        unused_outputs = []
+
+        for node in nodes:
+            for input_port in node.input_ports():
+                if not input_port.connected_ports():
+                    unused_inputs.append(f"{node.name()}.{input_port.name()}")
+            for output_port in node.output_ports():
+                if not output_port.connected_ports():
+                    unused_outputs.append(f"{node.name()}.{output_port.name()}")
+
+        return {"unused_inputs": unused_inputs, "unused_outputs": unused_outputs}
 
     @classmethod
     def _create_activation(cls, node: ActivationNode):

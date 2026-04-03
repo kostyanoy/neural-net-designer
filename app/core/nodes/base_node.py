@@ -26,7 +26,14 @@ class MyBaseNode(BaseNode):
 
     def _init_ports(self):
         """Инициализация портов узла"""
-        pass
+
+    def add_input_port(self, name):
+        """Создание входного порта"""
+        self.add_input(name, multi_input=False)
+
+    def add_output_port(self, name):
+        """Создание выходного порта"""
+        self.add_output(name, multi_output=False)
 
     @classmethod
     def get_property_schema(cls):
