@@ -311,7 +311,6 @@ class MainWindow(QMainWindow):
         if not is_valid:
             for i in range(1, 4):
                 self.tab_widget.setTabEnabled(i, False)
-                print("BLOCKED")
         else:
             self.tab_widget.setTabEnabled(1, True)
 

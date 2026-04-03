@@ -177,6 +177,15 @@ class ArchitectureTab(QWidget):
         self.graph.node_selection_changed.connect(self._on_nodes_selected)
         self.graph.property_changed.connect(self._on_node_property_changed)
 
+        self.graph.node_created.connect(self._on_graph_changed)
+        self.graph.nodes_deleted.connect(self._on_graph_changed)
+        self.graph.port_connected.connect(self._on_graph_changed)
+        self.graph.port_disconnected.connect(self._on_graph_changed)
+
+    def _on_graph_changed(self):
+        self._on_validate_graph()
+        self._project_manager.project_changed.emit()
+
     def _on_validate_graph(self):
         """Проверка графа на корректность"""
         validation_result = self._graph_compiler.validate_graph(self.graph)
@@ -207,6 +216,7 @@ class ArchitectureTab(QWidget):
         """При изменении свойства"""
         if self.property_panel.current_node == node:
             self.property_panel.update_property_value(prop_name, prop_value)
+        self._on_graph_changed()
 
     def _on_property_changed(self, prop_name: str, prop_value: object):
         """Обработка изменения свойства из панели"""
