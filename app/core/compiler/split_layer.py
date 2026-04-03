@@ -1,0 +1,15 @@
+from typing import Tuple
+
+import torch
+from torch import nn
+
+
+class SplitLayer(nn.Module):
+    """Слой для разветвления графа"""
+
+    def __init__(self):
+        super().__init__()
+        self.num_outputs = 2
+
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
+        return tuple(x for _ in range(self.num_outputs))

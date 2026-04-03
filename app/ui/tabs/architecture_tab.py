@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QLineEdit, QListW
 from torch import nn
 
 from core.compiler import GraphCompiler
-from core.nodes import ActivationNode, FlattenNode, InputNode, OutputNode
+from core.nodes import ActivationNode, FlattenNode, InputNode, OutputNode, MergeNode, SplitNode
 from core.nodes.base_node import MyBaseNode
 from core.nodes.dense_node import DenseNode
 from core.project_manager import ProjectManager
@@ -80,6 +80,8 @@ class ArchitectureTab(QWidget):
             {"name": "Dense", "id": "neural_net.DenseNode", "icon": "🔷"},
             {"name": "Activation", "id": "neural_net.ActivationNode", "icon": "🟣"},
             {"name": "Flatten", "id": "neural_net.FlattenNode", "icon": "🟠"},
+            {"name": "Split", "id": "neural_net.SplitNode", "icon": "🔀"},
+            {"name": "Merge", "id": "neural_net.MergeNode", "icon": "🔗"},
             {"name": "Output", "id": "neural_net.OutputNode", "icon": "🔴"},
         ]
 
@@ -127,7 +129,9 @@ class ArchitectureTab(QWidget):
         self.graph.register_node(DenseNode)
         self.graph.register_node(FlattenNode)
         self.graph.register_node(InputNode)
+        self.graph.register_node(MergeNode)
         self.graph.register_node(OutputNode)
+        self.graph.register_node(SplitNode)
 
     def _filter_blocks(self, text):
         """Фильтрация списка блоков по поиску."""

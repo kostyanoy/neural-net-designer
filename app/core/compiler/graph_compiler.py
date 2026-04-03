@@ -19,7 +19,9 @@ class GraphCompiler:
         ),
         "Flatten": lambda node: nn.Flatten(),
         "Input": lambda node: None,
+        "Merge": lambda node: MergeLayer(node.get_property("mode")),
         "Output": lambda node: None,
+        "Split": lambda node: SplitLayer(),
     }
 
     def __init__(self):
@@ -71,7 +73,8 @@ class GraphCompiler:
                 if in_degree[neighbor] == 0:
                     queue.append(neighbor)
 
-        assert len(result) == len(node_names), f"Обнаружен цикл в графе: количество узлов {len(node_names)} не равно полученному алгоритмом {len(result)}"
+        assert len(result) == len(
+            node_names), f"Обнаружен цикл в графе: количество узлов {len(node_names)} не равно полученному алгоритмом {len(result)}"
         return result
 
     def _create_layer(self, node: MyBaseNode):
@@ -83,7 +86,6 @@ class GraphCompiler:
             print(f"Неизвестный узел: {node_type}. Используем Identity")
             return nn.Identity()
         return factory(node)
-
 
     @staticmethod
     def _find_node_by_name(nodes: List[MyBaseNode], node_name: str):
