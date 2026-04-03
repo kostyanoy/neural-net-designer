@@ -4,7 +4,7 @@ from NodeGraphQt import NodeGraph
 from PyQt5 import QtCore
 from PyQt5.QtCore import QEvent, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QLineEdit, QListWidget, QAbstractItemView, \
-    QListWidgetItem, QPushButton
+    QListWidgetItem, QPushButton, QLabel
 from torch import nn
 
 from core.compiler import GraphCompiler
@@ -18,7 +18,8 @@ from ui.widgets.property_panel import PropertyPanel
 
 class ArchitectureTab(QWidget):
     """Вкладка для визуального проектирования архитектуры нейросети."""
-    user_error = pyqtSignal(str)
+    validation_changed = pyqtSignal(bool)
+    proceed_requested = pyqtSignal()
 
     def __init__(self, parent, project_manager: ProjectManager):
         super().__init__(parent)
@@ -29,6 +30,7 @@ class ArchitectureTab(QWidget):
         self._project_manager = project_manager
         self._graph_compiler = GraphCompiler()
         self._compiled_model = None
+        self._is_valid = False
 
         self.graph.create_node("neural_net.DenseNode")
 
@@ -54,6 +56,15 @@ class ArchitectureTab(QWidget):
         self.validate_btn = QPushButton("Валидировать граф")
         self.validate_btn.clicked.connect(self._on_validate_graph)
         layout.addWidget(self.validate_btn)
+
+        self.validation_label = QLabel("")
+        self.validation_label.setWordWrap(True)
+        layout.addWidget(self.validation_label)
+
+        self.next_btn = QPushButton("➡️ Далее: Обучение")
+        self.next_btn.clicked.connect(self._on_proceed_clicked)
+        self.next_btn.setEnabled(False)
+        layout.addWidget(self.next_btn)
 
         # Поле поиска
         # TODO
@@ -161,18 +172,29 @@ class ArchitectureTab(QWidget):
 
         return super().eventFilter(source, event)
 
-    def _on_validate_graph(self):
-        """Проверка графа на корректность"""
-        validation_result = self._graph_compiler.validate_graph(self.graph)
-        if validation_result["is_valid"]:
-            self.user_error.emit("✅ Граф валиден!")
-        else:
-            self.user_error.emit(validation_result["error"])
-
     def _connect_signals(self):
         """Подключение сигналов для синхронизации свойств"""
         self.graph.node_selection_changed.connect(self._on_nodes_selected)
         self.graph.property_changed.connect(self._on_node_property_changed)
+
+    def _on_validate_graph(self):
+        """Проверка графа на корректность"""
+        validation_result = self._graph_compiler.validate_graph(self.graph)
+        if validation_result["is_valid"]:
+            self._is_valid = True
+            self.next_btn.setEnabled(True)
+            self.validation_label.setText("✅ Граф валиден!")
+        else:
+            self._is_valid = False
+            self.next_btn.setEnabled(False)
+            self.validation_label.setText(validation_result["error"])
+        self.validation_changed.emit(self._is_valid)
+        return validation_result
+
+    def _on_proceed_clicked(self):
+        """Переход на вкладку обучения"""
+        if self._is_valid:
+            self.proceed_requested.emit()
 
     def _on_nodes_selected(self, nodes: list[MyBaseNode]):
         """При выборе узла - загрузить его свойства в правую панель"""
@@ -206,9 +228,8 @@ class ArchitectureTab(QWidget):
             print(f"Error deserializing graph: {e}")
 
     def get_model(self) -> Optional[nn.Module]:
-        validation_result = self._graph_compiler.validate_graph(self.graph)
+        validation_result = self._on_validate_graph()
         if not validation_result["is_valid"]:
-            self.user_error.emit(validation_result["error"])
             return None
         self._compiled_model = self._graph_compiler.compile(self.graph)
         return self._compiled_model

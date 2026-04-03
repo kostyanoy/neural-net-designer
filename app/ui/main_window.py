@@ -55,6 +55,9 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.monitor_tab, "📊 Мониторинг")
         self.tab_widget.addTab(self.export_tab, "💾 Экспорт")
 
+        for i in range(1, 4):
+            self.tab_widget.setTabEnabled(i, False)
+
     def _init_docks(self):
         """Подключение Dock"""
         self.addDockWidget(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, self.architecture_tab.left_dock)
@@ -102,7 +105,8 @@ class MainWindow(QMainWindow):
 
         # --- Architecture Tab ---
         self.architecture_tab.graph.node_selected.connect(self._on_node_selected)
-        self.architecture_tab.user_error.connect(self._on_user_error)
+        self.architecture_tab.validation_changed.connect(self._on_validation_changed)
+        self.architecture_tab.proceed_requested.connect(self._on_proceed_to_training)
 
         # --- Export Tab ---
         self.export_tab.generate_code_requested.connect(self._on_generate_code)
@@ -116,7 +120,7 @@ class MainWindow(QMainWindow):
     def _init_project(self):
         self.project_manager.create_new_project()
 
-    def _on_user_error(self, message: str):
+    def _on_user_message(self, message: str):
         self.status_bar.showMessage(message)
 
     # --- Слоты: File ---
@@ -301,6 +305,19 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage(f"Selected Node: {node.name()}")
         else:
             self.status_bar.showMessage("No node selected")
+
+    def _on_validation_changed(self, is_valid: bool):
+        """Блокировка/разблокировка вкладок в зависимости от валидации"""
+        if not is_valid:
+            for i in range(1, 4):
+                self.tab_widget.setTabEnabled(i, False)
+                print("BLOCKED")
+        else:
+            self.tab_widget.setTabEnabled(1, True)
+
+    def _on_proceed_to_training(self):
+        """Переход на вкладку обучения"""
+        self.tab_widget.setCurrentIndex(1)
 
     def _on_generate_code(self, code_type: str):
         """Генерация кода по типу."""
