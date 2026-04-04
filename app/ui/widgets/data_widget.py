@@ -149,7 +149,7 @@ class DataWidget(QWidget):
             self._load_iris()
 
         if self._loaded_dataset is not None:
-            self.dataset_label.setText(f"Загружен: {dataset_name}")
+            self.dataset_label.setText(f"Загружен - {dataset_name}")
             self.next_btn.setEnabled(True)
             self._on_change()
 

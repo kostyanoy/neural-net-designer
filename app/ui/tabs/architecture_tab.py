@@ -62,7 +62,7 @@ class ArchitectureTab(QWidget):
         layout.addWidget(self.validation_label)
 
         self.next_btn = QPushButton("➡️ Далее: Обучение")
-        self.next_btn.clicked.connect(self._on_proceed_clicked)
+        self.next_btn.clicked.connect(self._on_next_clicked)
         self.next_btn.setEnabled(False)
         layout.addWidget(self.next_btn)
 
@@ -200,7 +200,7 @@ class ArchitectureTab(QWidget):
         self.validation_changed.emit(self._is_valid)
         return validation_result
 
-    def _on_proceed_clicked(self):
+    def _on_next_clicked(self):
         """Переход на вкладку обучения"""
         if self._is_valid:
             self.proceed_requested.emit()

@@ -3,6 +3,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QFormLayout, QSpinBox, QComboBox, QCheckBox, \
     QDoubleSpinBox, QListWidget
+from torch import nn
 
 
 class TrainingWidget(QWidget):
@@ -181,3 +182,37 @@ class TrainingWidget(QWidget):
                 item.setCheckState(QtCore.Qt.CheckState.Unchecked)
 
         self.training_config_changed.emit()
+
+    def create_optimizer(self, model_parameters) -> torch.optim.Optimizer:
+        """Создать оптимизатор на основе выбранных настроек"""
+        opt_name = self.optimizer_combo.currentText()
+        lr = float(self.lr_spin.value())
+        weight_decay = float(self.wd_spin.value())
+
+        if opt_name == "Adam":
+            return torch.optim.Adam(model_parameters, lr=lr, weight_decay=weight_decay)
+        elif opt_name == "SGD":
+            return torch.optim.SGD(model_parameters, lr=lr, weight_decay=weight_decay, momentum=0.9)
+        elif opt_name == "AdamW":
+            return torch.optim.AdamW(model_parameters, lr=lr, weight_decay=weight_decay)
+        elif opt_name == "RMSprop":
+            return torch.optim.RMSprop(model_parameters, lr=lr, weight_decay=weight_decay)
+        elif opt_name == "Adagrad":
+            return torch.optim.Adagrad(model_parameters, lr=lr, weight_decay=weight_decay)
+        else:
+            raise NotImplementedError(f"{opt_name} optimizer is not implemented")
+
+    def create_loss_function(self) -> torch.nn.Module:
+        """Создать функцию потерь на основе выбранных настроек"""
+        loss_name = self.loss_combo.currentText()
+
+        if loss_name == "CrossEntropyLoss":
+            return nn.CrossEntropyLoss()
+        elif loss_name == "MSELoss":
+            return nn.MSELoss()
+        elif loss_name == "BCELoss":
+            return nn.BCELoss()
+        elif loss_name == "BCEWithLogitsLoss":
+            return nn.BCEWithLogitsLoss()
+        else:
+            return nn.CrossEntropyLoss()

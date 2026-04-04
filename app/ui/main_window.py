@@ -108,6 +108,9 @@ class MainWindow(QMainWindow):
         self.architecture_tab.validation_changed.connect(self._on_validation_changed)
         self.architecture_tab.proceed_requested.connect(self._on_proceed_to_training)
 
+        # --- Training Tab ---
+        self.training_tab.proceed_requested.connect(self._on_proceed_to_monitor)
+
         # --- Export Tab ---
         self.export_tab.generate_code_requested.connect(self._on_generate_code)
         self.export_tab.export_weights_requested.connect(self._on_export_weights)
@@ -317,6 +320,10 @@ class MainWindow(QMainWindow):
     def _on_proceed_to_training(self):
         """Переход на вкладку обучения"""
         self.tab_widget.setCurrentIndex(1)
+
+    def _on_proceed_to_monitor(self):
+        """Переход на вкладку мониторинга"""
+        self.tab_widget.setCurrentIndex(2)
 
     def _on_generate_code(self, code_type: str):
         """Генерация кода по типу."""
