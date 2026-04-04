@@ -1,9 +1,13 @@
 from pathlib import Path
 
+import torch
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QFormLayout, QLabel, QPushButton, QComboBox, QHBoxLayout, \
     QSpinBox, QSlider, QCheckBox
+from torch.utils.data import TensorDataset
+from torchvision import transforms, datasets
+from sklearn import datasets as sklearn_datasets
 
 from ui.dialog.message_boxes import choose_file_dataset, choose_dir_dataset
 
@@ -12,11 +16,13 @@ class DataWidget(QWidget):
     """Виджет настройки датасета"""
 
     dataset_config_changed = pyqtSignal()
+    proceed_requested = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._current_dataset_path = None
         self._current_dataset_type = None
+        self._loaded_dataset = None
         self._init_ui()
 
     def _init_ui(self):
@@ -47,8 +53,12 @@ class DataWidget(QWidget):
         self.dataset_combo.currentIndexChanged.connect(self._on_dataset_changed)
         dataset_layout.addRow("Тип:", self.dataset_combo)
 
-        self.dataset_label = QLabel("Не выбран")
-        dataset_layout.addRow("Текущий:", self.dataset_label)
+        self.load_btn = QPushButton("Загрузить датасет")
+        self.load_btn.clicked.connect(self._on_load_clicked)
+        dataset_layout.addWidget(self.load_btn)
+
+        self.dataset_label = QLabel("Не загружен")
+        dataset_layout.addRow("Датасет:", self.dataset_label)
 
         self.select_file_btn = QPushButton("Из файла (CSV)")
         self.select_file_btn.clicked.connect(self._on_select_file_dataset)
@@ -59,6 +69,11 @@ class DataWidget(QWidget):
         self.select_folder_btn.clicked.connect(self._on_select_folder_dataset)
         self.select_folder_btn.setVisible(False)
         dataset_layout.addRow(self.select_folder_btn)
+
+        self.next_btn = QPushButton("➡️ Далее: Мониторинг")
+        self.next_btn.clicked.connect(self._on_next_clicked)
+        self.next_btn.setEnabled(False)
+        dataset_layout.addWidget(self.next_btn)
 
         return dataset_group
 
@@ -111,17 +126,91 @@ class DataWidget(QWidget):
         is_custom = "Свой датасет" in dataset_text
 
         if is_custom:
-            self.dataset_label.setText("Не выбран")
+            self.load_btn.setVisible(False)
             self._current_dataset_type = None
             self._current_dataset_path = None
         else:
-            self.dataset_label.setText(dataset_text)
+            self.load_btn.setVisible(True)
             self._current_dataset_type = dataset_text
             self._current_dataset_path = "preset"
 
+        self.dataset_label.setText("Не загружен")
         self.select_file_btn.setVisible(is_custom)
         self.select_folder_btn.setVisible(is_custom)
         self._on_change()
+
+    def _on_load_clicked(self):
+        """Загрузка предзагруженного датасета"""
+        dataset_name = self.dataset_combo.currentText()
+
+        if dataset_name == "MNIST":
+            self._load_mnist()
+        elif dataset_name == "Цветки Ириса":
+            self._load_iris()
+
+        if self._loaded_dataset is not None:
+            self.dataset_label.setText(f"Загружен: {dataset_name}")
+            self.next_btn.setEnabled(True)
+            self._on_change()
+
+    def _load_mnist(self):
+        """Загрузка датасета MNIST"""
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.1307,), (0.3081,))
+        ])
+
+        train_dataset = datasets.MNIST(root="./data", train=True, download=True, transform=transform)
+        test_dataset = datasets.MNIST(root=".data", train=False, download=True, transform=transform)
+
+        self._loaded_dataset = {
+            "name": "MNIST",
+            "train_dataset": train_dataset,
+            "test_dataset": test_dataset,
+            "input_shape": (1, 28, 28),
+            "num_classes": 10
+        }
+
+    def _load_iris(self):
+        """Загрузка датасета Ирисы Фишера"""
+        train_size = self.train_spin.value() / 100.0
+        iris = sklearn_datasets.load_iris()
+
+        X = iris.data
+        y = iris.target
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y,
+            train_size=train_size,
+            stratify=y if self.stratify_check.isChecked() else None,
+        )
+
+        norm_type = self.norm_combo.currentText()
+        if norm_type == "Z-Score":
+            mean = X_train.mean(axis=0)
+            std = X_train.std(axis=0)
+            X_train = (X_train - mean) / (std + 1e-8)
+            X_test = (X_test - mean) / (std + 1e-8)
+        elif self.norm_combo.currentText() == "MinMax":
+            min_val = X_train.min(axis=0)
+            max_val = X_train.max(axis=0)
+            X_train = (X_train - min_val) / (max_val - min_val + 1e-8)
+            X_test = (X_test - min_val) / (max_val - min_val + 1e-8)
+
+        X_train_tensor = torch.FloatTensor(X_train)
+        X_test_tensor = torch.FloatTensor(X_test)
+        y_train_tensor = torch.LongTensor(y_train)
+        y_test_tensor = torch.LongTensor(y_test)
+
+        train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
+        test_dataset = TensorDataset(X_test_tensor, y_test_tensor)
+
+        self._loaded_dataset = {
+            "name": "Iris",
+            "train_dataset": train_dataset,
+            "test_dataset": test_dataset,
+            "input_shape": (4, ),
+            "num_classes": 3
+        }
 
     def _on_select_file_dataset(self):
         """Выбор датасета из файла (CSV)"""
@@ -144,6 +233,10 @@ class DataWidget(QWidget):
             self.dataset_label.setText(f"Папка: {foldername}")
             self._on_change()
 
+    def _on_next_clicked(self):
+        """Переход на вкладку мониторинга"""
+        self.proceed_requested.emit()
+
     def _on_split_changed(self, value):
         """Синхронизация слайдера и spinbox"""
         self.split_slider.setValue(value)
@@ -163,6 +256,7 @@ class DataWidget(QWidget):
         """Сбросить виджет датасета к начальному состоянию"""
         self._current_dataset_path = None
         self._current_dataset_type = None
+        self._loaded_dataset = None
         self.dataset_combo.setCurrentIndex(0)
         self.dataset_label.setText("Не выбран")
         self.select_file_btn.setVisible(False)
@@ -172,6 +266,7 @@ class DataWidget(QWidget):
         self.test_spin.setValue(20)
         self.stratify_check.setChecked(True)
         self.norm_combo.setCurrentText("Z-Score")
+        self.next_btn.setEnabled(False)
         self._on_change()
 
     def get_config(self) -> dict:
@@ -224,3 +319,7 @@ class DataWidget(QWidget):
 
         self.stratify_check.setChecked(config.get("stratified", True))
         self.norm_combo.setCurrentIndex(config.get("normalization", 0))
+
+    def get_dataset(self):
+        """Получить загруженный датасет"""
+        return self._loaded_dataset
