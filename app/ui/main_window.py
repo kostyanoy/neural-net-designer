@@ -324,6 +324,8 @@ class MainWindow(QMainWindow):
     def _on_proceed_to_monitor(self):
         """Переход на вкладку мониторинга"""
         self.tab_widget.setCurrentIndex(2)
+        print(self.training_tab.get_training_object(self.architecture_tab.get_model()))
+
 
     def _on_generate_code(self, code_type: str):
         """Генерация кода по типу."""

@@ -5,6 +5,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QFormLayout, QLabel, QPushButton, QComboBox, QHBoxLayout, \
     QSpinBox, QSlider, QCheckBox
+from sklearn.model_selection import train_test_split
 from torch.utils.data import TensorDataset
 from torchvision import transforms, datasets
 from sklearn import datasets as sklearn_datasets
@@ -143,6 +144,7 @@ class DataWidget(QWidget):
         """Загрузка предзагруженного датасета"""
         dataset_name = self.dataset_combo.currentText()
 
+        self.dataset_label.setText("Загружается...")
         if dataset_name == "MNIST":
             self._load_mnist()
         elif dataset_name == "Цветки Ириса":
