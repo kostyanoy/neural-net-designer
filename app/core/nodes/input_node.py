@@ -3,6 +3,7 @@ from core.nodes.properties import TextProperty
 
 
 class InputNode(MyBaseNode):
+    """Узел входного слоя нейронной сети."""
     NODE_NAME = 'Input'
     PROPERTY_SCHEMA = {
         "input_shape": TextProperty(
@@ -13,4 +14,5 @@ class InputNode(MyBaseNode):
     }
 
     def _init_ports(self):
+        """Инициализация портов узла Input."""
         self.add_output_port("output")

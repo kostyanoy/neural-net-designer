@@ -16,6 +16,7 @@ from ui.dialog.message_boxes import choose_file_dataset, choose_dir_dataset
 class DataWidget(QWidget):
     """Виджет настройки датасета"""
 
+    dataset_valid = pyqtSignal(bool)
     dataset_config_changed = pyqtSignal()
     proceed_requested = pyqtSignal()
 
@@ -29,6 +30,7 @@ class DataWidget(QWidget):
         self._init_ui()
 
     def _init_ui(self):
+        """Инициализация UI элементов виджета датасета."""
         layout = QVBoxLayout()
         self.setLayout(layout)
 
@@ -43,6 +45,7 @@ class DataWidget(QWidget):
         return dataset_group
 
     def _create_dataset_group(self) -> QGroupBox:
+        """Создание группы элементов выбора датасета."""
         dataset_group = QGroupBox("📊 Датасет")
         dataset_layout = QFormLayout()
         dataset_group.setLayout(dataset_layout)
@@ -81,6 +84,7 @@ class DataWidget(QWidget):
         return dataset_group
 
     def _create_preprocessing_group(self) -> QGroupBox:
+        """Создание группы элементов препроцессинга датасета."""
         preprocess_group = QGroupBox("🔧 Препроцессинг")
         preprocess_layout = QFormLayout()
         preprocess_group.setLayout(preprocess_layout)
@@ -148,7 +152,7 @@ class DataWidget(QWidget):
             return
 
         self.dataset_label.setText("Загружается...")
-        self._loaded_dataset = None
+        self.set_dataset(None)
         self.load_btn.setEnabled(False)
         self.next_btn.setEnabled(False)
 
@@ -171,7 +175,7 @@ class DataWidget(QWidget):
 
     def _on_dataset_loaded(self, dataset_info):
         """Обработка успешной загрузки датасета"""
-        self._loaded_dataset = dataset_info
+        self.set_dataset(dataset_info)
         self.dataset_label.setText(f"Загружен - {dataset_info['name']}")
         self.next_btn.setEnabled(True)
         self.load_btn.setEnabled(True)
@@ -181,7 +185,7 @@ class DataWidget(QWidget):
 
     def _on_dataset_load_error(self, error_msg):
         """Обработка ошибки загрузки"""
-        self._loaded_dataset = None
+        self.set_dataset(None)
         self.dataset_label.setText(f"Ошибка: {error_msg}")
         self.load_btn.setEnabled(True)
         self.next_btn.setEnabled(False)
@@ -226,6 +230,7 @@ class DataWidget(QWidget):
         self._on_change()
 
     def _on_change(self):
+        """Обработка изменений в настройках датасета."""
         self.dataset_config_changed.emit()
 
     def clear_session(self):
@@ -234,7 +239,7 @@ class DataWidget(QWidget):
 
         self._current_dataset_path = None
         self._current_dataset_type = None
-        self._loaded_dataset = None
+        self.set_dataset(None)
         self.dataset_combo.setCurrentIndex(0)
         self.dataset_label.setText("Не загружен")
         self.select_file_btn.setVisible(False)
@@ -248,6 +253,7 @@ class DataWidget(QWidget):
         self._on_change()
 
     def _clear_thread(self):
+        """Очистка и завершение потока загрузки датасета."""
         if self._loader_thread and self._loader_thread.isRunning():
             self._loader_thread.quit()
             self._loader_thread.wait(1000)
@@ -309,6 +315,14 @@ class DataWidget(QWidget):
         """Получить загруженный датасет"""
         return self._loaded_dataset
 
+    def set_dataset(self, dataset):
+        """Установить загруженный датасет."""
+        if dataset is None:
+            self.dataset_valid.emit(False)
+        else:
+            self.dataset_valid.emit(True)
+        self._loaded_dataset = dataset
+
 
 class DatasetLoaderWorker(QObject):
     """Фоновая загрузка датасета без блокировки UI."""
@@ -323,6 +337,7 @@ class DatasetLoaderWorker(QObject):
         self.norm_type = norm_type
 
     def run(self):
+        """Запуск загрузки датасета в фоновом потоке."""
         try:
             if self.dataset_name == "MNIST":
                 result = self._load_mnist_impl()
@@ -337,6 +352,7 @@ class DatasetLoaderWorker(QObject):
 
     @staticmethod
     def _load_mnist_impl():
+        """Загрузка датасета MNIST."""
         transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,))
@@ -355,6 +371,7 @@ class DatasetLoaderWorker(QObject):
 
     @staticmethod
     def _load_iris_impl(train_split: float, stratified: bool, norm_type: str):
+        """Загрузка датасета Iris с препроцессингом."""
         train_size = train_split / 100.0
         iris = sklearn_datasets.load_iris()
 

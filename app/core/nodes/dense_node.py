@@ -3,6 +3,7 @@ from core.nodes.properties import IntProperty, CheckboxProperty
 
 
 class DenseNode(MyBaseNode):
+    """Узел полносвязного слоя (Dense/Linear)."""
     NODE_NAME = 'Dense'
     PROPERTY_SCHEMA = {
         "units": IntProperty(
@@ -18,5 +19,6 @@ class DenseNode(MyBaseNode):
     }
 
     def _init_ports(self):
+        """Инициализация портов узла Dense."""
         self.add_input_port('input')
         self.add_output_port('output')

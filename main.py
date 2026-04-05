@@ -7,9 +7,11 @@ from app.config import APP_NAME, VERSION, APP_STYLES
 from app.ui.main_window import MainWindow
 
 def exception_hook(exctype, value, tb):
+    """Обработчик необработанных исключений приложения."""
     print('\n'.join(traceback.format_exception(exctype, value, tb)))
 
 def main():
+    """Точка входа в приложение NeuralNet Designer."""
     sys.excepthook = exception_hook
 
     app = QApplication(sys.argv)

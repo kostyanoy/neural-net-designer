@@ -26,6 +26,7 @@ class MyBaseNode(BaseNode):
 
     def _init_ports(self):
         """Инициализация портов узла"""
+        pass
 
     def add_input_port(self, name):
         """Создание входного порта"""

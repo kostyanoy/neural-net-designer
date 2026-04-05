@@ -22,6 +22,7 @@ class PropertyPanel(QWidget):
         self._init_ui()
 
     def _init_ui(self):
+        """Инициализация UI элементов панели свойств."""
         layout = QVBoxLayout()
         self.setLayout(layout)
 

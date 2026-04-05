@@ -3,6 +3,7 @@ from core.nodes.properties import ComboProperty
 
 
 class ActivationNode(MyBaseNode):
+    """Узел функции активации нейронной сети."""
     NODE_NAME = "Activation"
     PROPERTY_SCHEMA = {
         "function": ComboProperty(
@@ -13,5 +14,6 @@ class ActivationNode(MyBaseNode):
     }
 
     def _init_ports(self):
+        """Инициализация портов узла активации."""
         self.add_input_port("input")
         self.add_output_port("output")

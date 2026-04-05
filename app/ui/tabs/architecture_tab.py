@@ -35,6 +35,7 @@ class ArchitectureTab(QWidget):
         self.graph.create_node("neural_net.DenseNode")
 
     def _init_ui(self):
+        """Инициализация UI элементов вкладки архитектуры."""
         layout = QVBoxLayout()
         self.setLayout(layout)
 
@@ -183,6 +184,7 @@ class ArchitectureTab(QWidget):
         self.graph.port_disconnected.connect(self._on_graph_changed)
 
     def _on_graph_changed(self):
+        """Обработка изменений в графе."""
         self._on_validate_graph()
         self._project_manager.project_changed.emit()
 
@@ -238,6 +240,7 @@ class ArchitectureTab(QWidget):
             print(f"Error deserializing graph: {e}")
 
     def get_model(self) -> Optional[nn.Module]:
+        """Получить скомпилированную модель PyTorch."""
         validation_result = self._on_validate_graph()
         if not validation_result["is_valid"]:
             return None

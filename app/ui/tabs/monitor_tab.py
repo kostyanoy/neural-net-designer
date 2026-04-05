@@ -173,6 +173,7 @@ class MonitorTab(QWidget):
         return group
 
     def _connect_signals(self):
+        """Подключение сигналов для обработки событий обучения."""
         # TODO обработать training_finished и т.д.
         pass
 

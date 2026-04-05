@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QMessageBox, QFileDialog
 
 
 def save_changes_box(parent=None):
+    """Диалог сохранения изменений перед созданием нового проекта."""
     return QMessageBox.question(
         parent,
         "Сохранить изменения",
@@ -12,6 +13,7 @@ def save_changes_box(parent=None):
 
 
 def choose_open_file(parent=None):
+    """Диалог выбора файла проекта для открытия."""
     return QFileDialog.getOpenFileName(
         parent,
         "Открыть проект",
@@ -20,6 +22,7 @@ def choose_open_file(parent=None):
 
 
 def choose_save_file(parent=None, name="Untitled"):
+    """Диалог выбора файла для сохранения проекта."""
     return QFileDialog.getSaveFileName(
         parent,
         "Сохранить проект как",
@@ -29,6 +32,7 @@ def choose_save_file(parent=None, name="Untitled"):
 
 
 def choose_file_dataset(parent=None):
+    """Диалог выбора CSV файла датасета."""
     return QFileDialog.getOpenFileName(
         parent,
         "Выберите CSV файл",
@@ -38,12 +42,14 @@ def choose_file_dataset(parent=None):
 
 
 def choose_dir_dataset(parent=None):
+    """Диалог выбора папки с изображениями датасета."""
     return QFileDialog.getExistingDirectory(
         parent,
         "Выберите папку с изображениями"
     )
 
 def choose_code_file(parent, name, types):
+    """Диалог выбора файла для экспорта кода."""
     return QFileDialog.getSaveFileName(
         parent,
         "Сохранить код",
@@ -52,6 +58,7 @@ def choose_code_file(parent, name, types):
     )
 
 def choose_weights_file(parent=None):
+    """Диалог выбора файла для экспорта весов модели."""
     return QFileDialog.getSaveFileName(
             parent,
             "Сохранить веса модели",

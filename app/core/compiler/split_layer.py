@@ -12,4 +12,5 @@ class SplitLayer(nn.Module):
         self.num_outputs = 2
 
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
+        """Выполняет прямое распространение для слоя разветвления."""
         return tuple(x for _ in range(self.num_outputs))

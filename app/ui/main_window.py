@@ -105,11 +105,12 @@ class MainWindow(QMainWindow):
 
         # --- Architecture Tab ---
         self.architecture_tab.graph.node_selected.connect(self._on_node_selected)
-        self.architecture_tab.validation_changed.connect(self._on_validation_changed)
+        self.architecture_tab.validation_changed.connect(self._on_architecture_validation_changed)
         self.architecture_tab.proceed_requested.connect(self._on_proceed_to_training)
 
         # --- Training Tab ---
         self.training_tab.proceed_requested.connect(self._on_proceed_to_monitor)
+        self.training_tab.validation_changed.connect(self._on_training_validation_changed)
 
         # --- Export Tab ---
         self.export_tab.generate_code_requested.connect(self._on_generate_code)
@@ -121,9 +122,11 @@ class MainWindow(QMainWindow):
         self.project_manager.project_changed.connect(self._on_project_changed)
 
     def _init_project(self):
+        """Создание нового проекта"""
         self.project_manager.create_new_project()
 
     def _on_user_message(self, message: str):
+        """Отображение сообщения в статус-баре."""
         self.status_bar.showMessage(message)
 
     # --- Слоты: File ---
@@ -282,7 +285,6 @@ class MainWindow(QMainWindow):
 
     def _on_tab_changed(self, index: int):
         """Обработка переключения между вкладками."""
-        # TODO
         tab_name = self.tab_widget.tabText(index)
         self.status_bar.showMessage(f"Active Tab: {tab_name}")
 
@@ -309,7 +311,7 @@ class MainWindow(QMainWindow):
         else:
             self.status_bar.showMessage("No node selected")
 
-    def _on_validation_changed(self, is_valid: bool):
+    def _on_architecture_validation_changed(self, is_valid: bool):
         """Блокировка/разблокировка вкладок в зависимости от валидации"""
         if not is_valid:
             for i in range(1, 4):
@@ -320,6 +322,15 @@ class MainWindow(QMainWindow):
     def _on_proceed_to_training(self):
         """Переход на вкладку обучения"""
         self.tab_widget.setCurrentIndex(1)
+
+    def _on_training_validation_changed(self, is_valid: bool):
+        """Блокировка/разблокировка вкладок в зависимости от валидации"""
+        if not is_valid:
+            self.tab_widget.setTabEnabled(2, False)
+            self.tab_widget.setTabEnabled(3, False)
+        else:
+            self.tab_widget.setTabEnabled(2, True)
+            self.tab_widget.setTabEnabled(3, True)
 
     def _on_proceed_to_monitor(self):
         """Переход на вкладку мониторинга"""

@@ -12,6 +12,7 @@ class MergeLayer(nn.Module):
         self.mode = mode
 
     def forward(self, inputs: List[torch.Tensor]) -> torch.Tensor:
+        """Выполняет слияние входных тензоров"""
         if self.mode == "concat":
             return torch.cat(inputs, dim=1)
         elif self.mode == "sum":

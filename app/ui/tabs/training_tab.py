@@ -11,7 +11,8 @@ from ui.widgets.training_widget import TrainingWidget
 
 
 class TrainingTab(QWidget):
-
+    """Вкладка для настройки параметров обучения и датасета."""
+    validation_changed = pyqtSignal(bool)
     proceed_requested = pyqtSignal()
 
     def __init__(self, parent, project_manager: ProjectManager):
@@ -22,6 +23,7 @@ class TrainingTab(QWidget):
         self.project_manager = project_manager
 
     def _init_ui(self):
+        """Инициализация UI элементов вкладки обучения."""
         layout = QVBoxLayout()
         self.setLayout(layout)
 
@@ -43,6 +45,7 @@ class TrainingTab(QWidget):
         self.data_widget.dataset_config_changed.connect(self._on_config_changed)
         self.training_widget.training_config_changed.connect(self._on_config_changed)
         self.data_widget.proceed_requested.connect(lambda: self.proceed_requested.emit())
+        self.data_widget.dataset_valid.connect(lambda is_valid: self.validation_changed.emit(is_valid))
 
     def _on_config_changed(self):
         """Обновление проекта"""
@@ -61,6 +64,7 @@ class TrainingTab(QWidget):
         }
 
     def set_config(self, config):
+        """Восстановить конфигурацию обучения из проекта."""
         self.clear_session()
         self.data_widget.set_config(config["dataset_config"])
         self.training_widget.set_config(config["training_config"])

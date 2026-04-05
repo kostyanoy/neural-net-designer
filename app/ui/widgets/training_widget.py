@@ -17,6 +17,7 @@ class TrainingWidget(QWidget):
         self._check_cuda()
 
     def _init_ui(self):
+        """Инициализация UI элементов виджета обучения."""
         layout = QVBoxLayout()
         self.setLayout(layout)
 
