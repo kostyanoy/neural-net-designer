@@ -2,13 +2,13 @@ from pathlib import Path
 
 import torch
 from PyQt5 import QtCore
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, QObject, QThread
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QFormLayout, QLabel, QPushButton, QComboBox, QHBoxLayout, \
     QSpinBox, QSlider, QCheckBox
+from sklearn import datasets as sklearn_datasets
 from sklearn.model_selection import train_test_split
 from torch.utils.data import TensorDataset
 from torchvision import transforms, datasets
-from sklearn import datasets as sklearn_datasets
 
 from ui.dialog.message_boxes import choose_file_dataset, choose_dir_dataset
 
@@ -24,6 +24,8 @@ class DataWidget(QWidget):
         self._current_dataset_path = None
         self._current_dataset_type = None
         self._loaded_dataset = None
+        self._loader_thread: QThread = None
+        self._loader_worker: DatasetLoaderWorker = None
         self._init_ui()
 
     def _init_ui(self):
@@ -142,77 +144,49 @@ class DataWidget(QWidget):
 
     def _on_load_clicked(self):
         """Загрузка предзагруженного датасета"""
-        dataset_name = self.dataset_combo.currentText()
+        if self._loader_thread and self._loader_thread.isRunning():
+            return
 
         self.dataset_label.setText("Загружается...")
-        if dataset_name == "MNIST":
-            self._load_mnist()
-        elif dataset_name == "Цветки Ириса":
-            self._load_iris()
+        self._loaded_dataset = None
+        self.load_btn.setEnabled(False)
+        self.next_btn.setEnabled(False)
 
-        if self._loaded_dataset is not None:
-            self.dataset_label.setText(f"Загружен - {dataset_name}")
-            self.next_btn.setEnabled(True)
-            self._on_change()
-
-    def _load_mnist(self):
-        """Загрузка датасета MNIST"""
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
-        ])
-
-        train_dataset = datasets.MNIST(root="./data", train=True, download=True, transform=transform)
-        test_dataset = datasets.MNIST(root=".data", train=False, download=True, transform=transform)
-
-        self._loaded_dataset = {
-            "name": "MNIST",
-            "train_dataset": train_dataset,
-            "test_dataset": test_dataset,
-            "input_shape": (1, 28, 28),
-            "num_classes": 10
-        }
-
-    def _load_iris(self):
-        """Загрузка датасета Ирисы Фишера"""
-        train_size = self.train_spin.value() / 100.0
-        iris = sklearn_datasets.load_iris()
-
-        X = iris.data
-        y = iris.target
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y,
-            train_size=train_size,
-            stratify=y if self.stratify_check.isChecked() else None,
-        )
-
+        dataset_name = self.dataset_combo.currentText()
+        train_split = self.train_spin.value()
+        stratified = self.stratify_check.isChecked()
         norm_type = self.norm_combo.currentText()
-        if norm_type == "Z-Score":
-            mean = X_train.mean(axis=0)
-            std = X_train.std(axis=0)
-            X_train = (X_train - mean) / (std + 1e-8)
-            X_test = (X_test - mean) / (std + 1e-8)
-        elif self.norm_combo.currentText() == "MinMax":
-            min_val = X_train.min(axis=0)
-            max_val = X_train.max(axis=0)
-            X_train = (X_train - min_val) / (max_val - min_val + 1e-8)
-            X_test = (X_test - min_val) / (max_val - min_val + 1e-8)
 
-        X_train_tensor = torch.FloatTensor(X_train)
-        X_test_tensor = torch.FloatTensor(X_test)
-        y_train_tensor = torch.LongTensor(y_train)
-        y_test_tensor = torch.LongTensor(y_test)
+        self._loader_worker = DatasetLoaderWorker(dataset_name, train_split, stratified, norm_type)
+        self._loader_thread = QThread()
 
-        train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
-        test_dataset = TensorDataset(X_test_tensor, y_test_tensor)
+        self._loader_worker.moveToThread(self._loader_thread)
+        self._loader_thread.started.connect(self._loader_worker.run)
+        self._loader_worker.finished.connect(self._on_dataset_loaded)
+        self._loader_worker.error.connect(self._on_dataset_load_error)
+        self._loader_thread.finished.connect(self._loader_thread.deleteLater)
+        self._loader_worker.finished.connect(self._loader_worker.deleteLater)
 
-        self._loaded_dataset = {
-            "name": "Iris",
-            "train_dataset": train_dataset,
-            "test_dataset": test_dataset,
-            "input_shape": (4, ),
-            "num_classes": 3
-        }
+        self._loader_thread.start()
+
+    def _on_dataset_loaded(self, dataset_info):
+        """Обработка успешной загрузки датасета"""
+        self._loaded_dataset = dataset_info
+        self.dataset_label.setText(f"Загружен - {dataset_info['name']}")
+        self.next_btn.setEnabled(True)
+        self.load_btn.setEnabled(True)
+        self._on_change()
+
+        self._clear_thread()
+
+    def _on_dataset_load_error(self, error_msg):
+        """Обработка ошибки загрузки"""
+        self._loaded_dataset = None
+        self.dataset_label.setText(f"Ошибка: {error_msg}")
+        self.load_btn.setEnabled(True)
+        self.next_btn.setEnabled(False)
+
+        self._clear_thread()
 
     def _on_select_file_dataset(self):
         """Выбор датасета из файла (CSV)"""
@@ -256,11 +230,13 @@ class DataWidget(QWidget):
 
     def clear_session(self):
         """Сбросить виджет датасета к начальному состоянию"""
+        self._clear_thread()
+
         self._current_dataset_path = None
         self._current_dataset_type = None
         self._loaded_dataset = None
         self.dataset_combo.setCurrentIndex(0)
-        self.dataset_label.setText("Не выбран")
+        self.dataset_label.setText("Не загружен")
         self.select_file_btn.setVisible(False)
         self.select_folder_btn.setVisible(False)
         self.train_spin.setValue(80)
@@ -270,6 +246,13 @@ class DataWidget(QWidget):
         self.norm_combo.setCurrentText("Z-Score")
         self.next_btn.setEnabled(False)
         self._on_change()
+
+    def _clear_thread(self):
+        if self._loader_thread and self._loader_thread.isRunning():
+            self._loader_thread.quit()
+            self._loader_thread.wait(1000)
+            self._loader_thread = None
+            self._loader_worker = None
 
     def get_config(self) -> dict:
         """Получить текущую конфигурацию датасета"""
@@ -325,3 +308,88 @@ class DataWidget(QWidget):
     def get_dataset(self):
         """Получить загруженный датасет"""
         return self._loaded_dataset
+
+
+class DatasetLoaderWorker(QObject):
+    """Фоновая загрузка датасета без блокировки UI."""
+    finished = pyqtSignal(dict)
+    error = pyqtSignal(str)
+
+    def __init__(self, dataset_name: str, train_split: float, stratified: bool, norm_type: str):
+        super().__init__()
+        self.dataset_name = dataset_name
+        self.train_split = train_split
+        self.stratified = stratified
+        self.norm_type = norm_type
+
+    def run(self):
+        try:
+            if self.dataset_name == "MNIST":
+                result = self._load_mnist_impl()
+            elif self.dataset_name == "Цветки Ириса":
+                result = self._load_iris_impl(self.train_split, self.stratified, self.norm_type)
+            else:
+                self.error.emit("Неизвестный тип датасета")
+                return
+            self.finished.emit(result)
+        except Exception as e:
+            self.error.emit(f"Ошибка загрузки: {str(e)}")
+
+    @staticmethod
+    def _load_mnist_impl():
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.1307,), (0.3081,))
+        ])
+
+        train_dataset = datasets.MNIST(root="./data", train=True, download=True, transform=transform)
+        test_dataset = datasets.MNIST(root="./data", train=False, download=True, transform=transform)
+
+        return {
+            "name": "MNIST",
+            "train_dataset": train_dataset,
+            "test_dataset": test_dataset,
+            "input_shape": (1, 28, 28),
+            "num_classes": 10
+        }
+
+    @staticmethod
+    def _load_iris_impl(train_split: float, stratified: bool, norm_type: str):
+        train_size = train_split / 100.0
+        iris = sklearn_datasets.load_iris()
+
+        X = iris.data
+        y = iris.target
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y,
+            train_size=train_size,
+            stratify=y if stratified else None,
+        )
+
+        norm_type = norm_type
+        if norm_type == "Z-Score":
+            mean = X_train.mean(axis=0)
+            std = X_train.std(axis=0)
+            X_train = (X_train - mean) / (std + 1e-8)
+            X_test = (X_test - mean) / (std + 1e-8)
+        elif norm_type == "MinMax":
+            min_val = X_train.min(axis=0)
+            max_val = X_train.max(axis=0)
+            X_train = (X_train - min_val) / (max_val - min_val + 1e-8)
+            X_test = (X_test - min_val) / (max_val - min_val + 1e-8)
+
+        X_train_tensor = torch.FloatTensor(X_train)
+        X_test_tensor = torch.FloatTensor(X_test)
+        y_train_tensor = torch.LongTensor(y_train)
+        y_test_tensor = torch.LongTensor(y_test)
+
+        train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
+        test_dataset = TensorDataset(X_test_tensor, y_test_tensor)
+
+        return {
+            "name": "Iris",
+            "train_dataset": train_dataset,
+            "test_dataset": test_dataset,
+            "input_shape": (4,),
+            "num_classes": 3
+        }
