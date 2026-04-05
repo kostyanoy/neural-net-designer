@@ -11,7 +11,7 @@ class DynamicGraphModel(nn.Module):
 
     def __init__(self, layers: Dict[str, nn.Module], connections: List[Dict[str, str]], execution_order: List[str]):
         super().__init__()
-        self._layers = layers
+        self._layers = nn.ModuleDict(layers)
         self._connections = connections
         self._execution_order = execution_order
 
