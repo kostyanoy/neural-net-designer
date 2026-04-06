@@ -33,13 +33,12 @@ class DynamicGraphModel(nn.Module):
                 output = layer(input_tensors)
             else:
                 output = layer(input_tensors[0])
-
             if isinstance(output, tuple):
                 for i, output_tensor in enumerate(output):
                     port_name = f"output_{i}"
                     tensors[(node_name, port_name)] = output_tensor
-                else:
-                    tensors[(node_name, "output")] = output
+            else:
+                tensors[(node_name, "output")] = output
 
         for conn in self._connections:
             if conn["to_node"] == self._output_node_name:
@@ -56,7 +55,6 @@ class DynamicGraphModel(nn.Module):
                 from_key = (conn["from_node"], conn["from_port"])
                 keys.append((conn["to_port"], from_key))
         keys.sort(key=lambda x: x[0])  # sort by node input ports (input_0, input_1, ...)
-
         input_tensors = [tensors[key] for _, key in keys]
         return input_tensors
 

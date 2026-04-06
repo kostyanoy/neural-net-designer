@@ -1,6 +1,11 @@
 import time
 
+import torch
 from PyQt5.QtCore import QObject, pyqtSignal
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from torch import nn
+from torch.optim import Optimizer
+from torch.utils.data import DataLoader
 
 
 class TrainingWorker(QObject):
@@ -94,8 +99,8 @@ class TrainingWorker(QObject):
                     f"Эпоха {epoch + 1}/{epochs} | "
                     f"Train Loss: {metrics['train_loss']:.4f} | "
                     f"Test Loss: {metrics['test_loss']:.4f} | "
-                    f"Train Acc: {metrics['accuracy']:.4f} | "
-                    f"Test Acc: {metrics['test_accuracy']:.4f}"
+                    f"Train Acc: {metrics['train_acc']:.4f} | "
+                    f"Test Acc: {metrics['test_acc']:.4f}"
                 )
 
                 if metrics["test_loss"] < self._best_loss:
@@ -108,34 +113,90 @@ class TrainingWorker(QObject):
                 "final_epoch": epochs
             }
             self.training_finished.emit(final_metrics)
-            self.log_message("Обучение завершено!")
+            self.log_message.emit("Обучение завершено!")
         except Exception as e:
             error_msg = f"Ошибка обучения: {str(e)}"
-            self.log_message.emit(error_msg)
             self.training_error.emit(error_msg)
         finally:
             self._is_running = False
 
-    def _train_epoch(self, model, train_loader, optimizer, loss_fn, device) -> dict:
+    def _train_epoch(self, model: nn.Module, loader: DataLoader, optimizer: Optimizer, loss_fn: nn.Module, device) -> dict:
         """Одна эпоха обучения."""
-        pass
+        model.train()
+        total_loss = 0.0
+        all_pred = []
+        all_targets = []
 
-    def _validate_epoch(self, model, test_loader, loss_fn, device) -> dict:
+        for data, target in loader:
+            if self._should_stop:
+                break
+
+            data, target = data.to(device), target.to(device)
+            optimizer.zero_grad()
+            output = model(data)
+            loss = loss_fn(output, target)
+            loss.backward()
+            optimizer.step()
+
+            total_loss += loss.item()
+
+            pred = output.argmax(dim=1)
+            all_pred.extend(pred.cpu().numpy())
+            all_targets.extend(target.cpu().numpy())
+
+        avg_loss = total_loss / len(loader)
+        metrics = self._calculate_metrics(all_pred, all_targets)
+        metrics["loss"] = avg_loss
+        return metrics
+
+    def _validate_epoch(self, model: nn.Module, loader: DataLoader, loss_fn: nn.Module, device) -> dict:
         """Одна эпоха валидации."""
-        pass
+        model.train()
+        total_loss = 0.0
+        all_pred = []
+        all_targets = []
 
-    def _calculate_metrics(self, preds, targets, metrics_list):
+        with torch.no_grad():
+            for data, target in loader:
+                data, target = data.to(device), target.to(device)
+                output = model(data)
+                loss = loss_fn(output, target)
+                total_loss += loss.item()
+
+                pred = output.argmax(dim=1)
+                all_pred.extend(pred.cpu().numpy())
+                all_targets.extend(target.cpu().numpy())
+
+        avg_loss = total_loss / len(loader)
+        metrics = self._calculate_metrics(all_pred, all_targets)
+        metrics["loss"] = avg_loss
+        return metrics
+
+    def _calculate_metrics(self, preds, targets):
         """Вычисление метрик."""
-        pass
+        metrics = {}
+        if len(preds) == 0:
+            return metrics
+
+        metrics["accuracy"] = accuracy_score(targets, preds)
+        metrics["precision"] = precision_score(targets, preds, average="weighted", zero_division=0)
+        metrics["recall"] = recall_score(targets, preds, average="weighted", zero_division=0)
+        metrics["f1_score"] = f1_score(targets, preds, average="weighted", zero_division=0)
+        return metrics
 
     def pause(self):
         """Поставить обучение на паузу."""
-        pass
+        if self._is_running and not self._is_paused:
+            self.is_paused = True
+            self.training_paused.emit()
 
     def resume(self):
         """Продолжить обучение."""
-        pass
+        if self._is_paused:
+            self._is_paused = False
+            self.training_resumed.emit()
 
     def stop(self):
         """Остановить обучение."""
-        pass
+        self._should_stop = True
+        self._is_paused = False

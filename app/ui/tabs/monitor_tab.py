@@ -1,10 +1,12 @@
 import time
 
 from PyQt5 import QtCore
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, QThread
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget, QSplitter, QGroupBox, QHBoxLayout, QPushButton, QFormLayout, \
-    QProgressBar, QGridLayout, QTabWidget, QTextEdit, QTableWidget, QHeaderView, QTableWidgetItem, QSizePolicy
+    QProgressBar, QGridLayout, QTabWidget, QTextEdit, QTableWidget, QHeaderView, QTableWidgetItem
 from pyqtgraph import PlotWidget
+
+from core.training.training_worker import TrainingWorker
 
 
 class MonitorTab(QWidget):
@@ -24,6 +26,9 @@ class MonitorTab(QWidget):
         self._is_training = False
         self._is_paused = False
         self._selected_metrics = ["Accuracy"]
+        self._training_worker: TrainingWorker = None
+        self._training_thread: QThread = None
+        self._training_data = None
 
         self._init_ui()
         self._connect_signals()
@@ -61,6 +66,7 @@ class MonitorTab(QWidget):
 
         self.start_btn = QPushButton("▶️ Старт")
         self.start_btn.clicked.connect(self._on_start_clicked)
+        self.start_btn.setEnabled(False)
 
         self.pause_btn = QPushButton("⏸️ Пауза")
         self.pause_btn.clicked.connect(self._on_pause_clicked)
@@ -172,64 +178,133 @@ class MonitorTab(QWidget):
 
         return group
 
+    def start_training(self, training_data):
+        if self._is_training:
+            return
+
+        self._training_data = training_data
+        self._training_worker = TrainingWorker(training_data)
+        self._training_thread = QThread()
+        self._training_worker.moveToThread(self._training_thread)
+
+        self._training_worker.training_started.connect(self._on_training_started)
+        self._training_worker.training_finished.connect(self._on_training_finished)
+        self._training_worker.training_stopped.connect(self._on_training_stopped)
+        self._training_worker.training_paused.connect(self._on_training_paused)
+        self._training_worker.training_resumed.connect(self._on_training_resumed)
+        self._training_worker.training_error.connect(self._on_training_error)
+        self._training_worker.epoch_started.connect(self._on_epoch_started)
+        self._training_worker.epoch_completed.connect(self._on_epoch_completed)
+        self._training_worker.log_message.connect(self.append_log)
+        self._training_worker.progress_updated.connect(self.update_progress)
+
+        self._training_thread.started.connect(self._training_worker.run)
+        self._training_thread.start()
+
+        self._is_training = True
+        self._is_paused = False
+
     def _connect_signals(self):
         """Подключение сигналов для обработки событий обучения."""
         # TODO обработать training_finished и т.д.
         pass
+
+    def _on_training_started(self):
+        """Обучение началось."""
+        self._start_time = time.time()
+        self._elapsed_time = 0
+        self.start_btn.setEnabled(False)
+        self.pause_btn.setEnabled(True)
+        self.stop_btn.setEnabled(True)
+        self.append_log("Обучение запущено")
+
+    def _on_training_finished(self):
+        """Обучение завершено."""
+        self._cleanup_training()
+        self.append_log("Обучение завершено")
+        self.training_finished.emit()
+
+    def _on_training_stopped(self):
+        """Обучение остановлено."""
+        self._cleanup_training()
+        self.append_log("Обучение остановлено")
+        self.training_stopped.emit()
+
+    def _on_training_paused(self):
+        """Обучение на паузе."""
+        self._is_paused = True
+        self._pause_start_time = time.time()
+        self.pause_btn.setText("▶️ Продолжить")
+        self.append_log("Обучение на паузе")
+        self.training_paused.emit()
+
+    def _on_training_resumed(self):
+        """Обучение продолжено."""
+        self._is_paused = False
+        self._start_time += time.time() - self._pause_start_time
+        self.pause_btn.setText("⏸️ Пауза")
+        self.append_log("Обучение продолжено")
+        self.training_resumed.emit()
+
+    def _on_training_error(self, error_msg: str):
+        """Ошибка обучения."""
+        self._cleanup_training()
+        self.append_log(error_msg)
+
+    def _on_epoch_started(self):
+        """Начало эпохи."""
+        pass
+
+    def _on_epoch_completed(self, metrics: dict):
+        """Завершение эпохи - обновление графиков и таблицы."""
+        self.update_metrics(metrics)
+
+    def _cleanup_training(self):
+        """Очистка после завершения обучения."""
+        self._is_training = False
+        self._is_paused = False
+        self.start_btn.setEnabled(True)
+        self.pause_btn.setEnabled(False)
+        self.stop_btn.setEnabled(False)
+        self.pause_btn.setText("⏸️ Пауза")
+
+        if self._training_thread and self._training_thread.isRunning():
+            self._training_thread.quit()
+            self._training_thread.wait(1000)
+
+        self._training_thread = None
+        self._training_worker = None
 
     def _on_start_clicked(self):
         """Обработка кнопки Старт."""
         if self._is_training and not self._is_paused:
             return
 
-        self._is_training = True
-        self._is_paused = False
-        self._start_time = time.time()
-        self._end_time = 0
-
-        self.start_btn.setEnabled(False)
-        self.pause_btn.setEnabled(True)
-        self.stop_btn.setEnabled(True)
-
-        self.append_log("Обучение запущено")
-        self.training_started.emit()
+        if self._is_paused:
+            if self._training_worker:
+                self._training_worker.resume()
+        else:
+            if self._training_data:
+                self.start_training(self._training_data)
 
     def _on_pause_clicked(self):
         """Обработка кнопки Пауза."""
         if not self._is_training:
             return
 
-        if not self._is_paused:
-            self._pause_start_time = time.time()
-            self._is_paused = True
-            self.pause_btn.setText("▶️ Продолжить")
-            self.append_log("Обучение на паузе")
-            self.training_paused.emit()
-        else:
-            pause_duration = int(time.time() - self._pause_start_time)
-            self._start_time += pause_duration
-            self._pause_start_time = None
-            self._is_paused = False
-            self.pause_btn.setText("⏸️ Пауза")
-            self.append_log("Обучение продолжено")
-            self.training_resumed.emit()
+        if self._training_worker:
+            if self._is_paused:
+                self._training_worker.resume()
+            else:
+                self._training_worker.pause()
 
     def _on_stop_clicked(self):
         """Обработка кнопки Стоп."""
         if not self._is_training:
             return
 
-        self._is_training = False
-        self._is_paused = False
-        self._start_time = None
-
-        self.start_btn.setEnabled(True)
-        self.pause_btn.setEnabled(False)
-        self.pause_btn.setText("⏸️ Пауза")
-        self.stop_btn.setEnabled(False)
-
-        self.append_log("Обучение остановлено")
-        self.training_stopped.emit()
+        if self._training_worker:
+            self._training_worker.stop()
 
     def _on_clear_log_clicked(self):
         """Очистка лога."""
@@ -345,6 +420,7 @@ class MonitorTab(QWidget):
         self._is_training = False
         self._is_paused = False
         self._start_time = None
+        self._pause_start_time = None
         self._elapsed_time = 0
 
         self.start_btn.setEnabled(True)
@@ -376,6 +452,7 @@ class MonitorTab(QWidget):
         """Установить конфигурацию отображаемых метрик"""
         self._selected_metrics = metrics
         self._reconfigure_ui()
+        self.append_log(f"Метрики настроены: {', '.join(metrics)}")
 
     def _reconfigure_ui(self):
         """Перенастроить UI под выбранные метрики"""
@@ -397,4 +474,16 @@ class MonitorTab(QWidget):
         self.metrics_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.metrics_table.setRowCount(0)
 
+    def set_training_data(self, training_data: dict):
+        """Установить данные для обучения."""
+        self._training_data = training_data
+        self.start_btn.setEnabled(True)
+        self.append_log("Данные для обучения загружены")
 
+    def is_training_active(self):
+        """Проверка, активно ли обучение."""
+        return self._is_training and not self._is_paused
+
+    def is_training_running(self):
+        """Проверка, запущен ли процесс обучения (включая паузу)."""
+        return self._is_training

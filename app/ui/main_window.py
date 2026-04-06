@@ -19,6 +19,7 @@ class MainWindow(QMainWindow):
 
         self.project_manager = ProjectManager()
         self._modified = False
+        self._training_locked = False
 
         self.setWindowTitle(APP_NAME)
 
@@ -111,6 +112,11 @@ class MainWindow(QMainWindow):
         # --- Training Tab ---
         self.training_tab.proceed_requested.connect(self._on_proceed_to_monitor)
         self.training_tab.validation_changed.connect(self._on_training_validation_changed)
+
+        # --- Monitor Tab ---
+        self.monitor_tab.training_started.connect(self._on_training_started)
+        self.monitor_tab.training_finished.connect(self._on_training_finished)
+        self.monitor_tab.training_stopped.connect(self._on_training_stopped)
 
         # --- Export Tab ---
         self.export_tab.generate_code_requested.connect(self._on_generate_code)
@@ -285,6 +291,11 @@ class MainWindow(QMainWindow):
 
     def _on_tab_changed(self, index: int):
         """Обработка переключения между вкладками."""
+        if self._training_locked:
+            self.tab_widget.setCurrentIndex(2)
+            self.status_bar.showMessage("Нельзя переключаться во время обучения!")
+            return
+
         tab_name = self.tab_widget.tabText(index)
         self.status_bar.showMessage(f"Active Tab: {tab_name}")
 
@@ -334,9 +345,39 @@ class MainWindow(QMainWindow):
 
     def _on_proceed_to_monitor(self):
         """Переход на вкладку мониторинга"""
-        self.tab_widget.setCurrentIndex(2)
-        print(self.training_tab.get_training_object(self.architecture_tab.get_model()))
+        model = self.architecture_tab.get_model()
+        if model:
+            training_data = self.training_tab.get_training_object(model)
+            if training_data:
+                self.monitor_tab.set_training_data(training_data)
+                self.tab_widget.setCurrentIndex(2)
 
+    def _on_training_started(self):
+        """Блокировка вкладок во время обучения."""
+        self._training_locked = True
+        self._update_tab_locking()
+        self.status_bar.showMessage("Обучение активно - переключение вкладок заблокировано")
+
+    def _on_training_finished(self):
+        """Разблокировка вкладок после завершения."""
+        self._training_locked = True
+        self._update_tab_locking()
+        self.status_bar.showMessage("Обучение завершено - вкладки разблокированы")
+
+    def _on_training_stopped(self):
+        """Разблокировка вкладок после остановки."""
+        self._training_locked = False
+        self._update_tab_locking()
+        self.status_bar.showMessage("Обучение остановлено - вкладки разблокированы")
+
+    def _update_tab_locking(self):
+        """Обновить состояние блокировки вкладок."""
+        if self._training_locked:
+            self.tab_widget.setTabEnabled(0, False)
+            self.tab_widget.setTabEnabled(1, False)
+        else:
+            self.tab_widget.setTabEnabled(0, True)
+            self.tab_widget.setTabEnabled(1, True)
 
     def _on_generate_code(self, code_type: str):
         """Генерация кода по типу."""
