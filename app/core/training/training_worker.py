@@ -32,8 +32,8 @@ class TrainingWorker(QObject):
         self._history = {
             'train_loss': [],
             'test_loss': [],
-            'train_acc': [],
-            'test_acc': []
+            'train_accuracy': [],
+            'test_accuracy': []
         }
 
     def run(self):
@@ -81,15 +81,15 @@ class TrainingWorker(QObject):
 
                 self._history["train_loss"].append(train_metrics["loss"])
                 self._history["test_loss"].append(test_metrics["loss"])
-                self._history["train_acc"].append(train_metrics["accuracy"])
-                self._history["test_acc"].append(test_metrics["accuracy"])
+                self._history["train_accuracy"].append(train_metrics["accuracy"])
+                self._history["test_accuracy"].append(test_metrics["accuracy"])
 
                 metrics = {
                     "epoch": epoch + 1,
                     "train_loss": train_metrics["loss"],
                     "test_loss": test_metrics["loss"],
-                    "train_acc": train_metrics["accuracy"],
-                    "test_acc": test_metrics["accuracy"],
+                    "train_accuracy": train_metrics["accuracy"],
+                    "test_accuracy": test_metrics["accuracy"],
                     "precision": train_metrics["precision"],
                     "recall": train_metrics["recall"],
                     "f1_score": train_metrics["f1_score"],
@@ -99,8 +99,8 @@ class TrainingWorker(QObject):
                     f"Эпоха {epoch + 1}/{epochs} | "
                     f"Train Loss: {metrics['train_loss']:.4f} | "
                     f"Test Loss: {metrics['test_loss']:.4f} | "
-                    f"Train Acc: {metrics['train_acc']:.4f} | "
-                    f"Test Acc: {metrics['test_acc']:.4f}"
+                    f"Train Acc: {metrics['train_accuracy']:.4f} | "
+                    f"Test Acc: {metrics['test_accuracy']:.4f}"
                 )
 
                 if metrics["test_loss"] < self._best_loss:

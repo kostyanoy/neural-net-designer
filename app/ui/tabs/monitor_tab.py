@@ -154,7 +154,7 @@ class MonitorTab(QWidget):
         self.metrics_table = QTableWidget()
         self.metrics_table.setColumnCount(5)
         self.metrics_table.setHorizontalHeaderLabels([
-            "Эпоха", "Loss", "Test Loss", "Accuracy", "Test Accuracy"
+            "Эпоха", "Train Loss", "Test Loss", "Train Accuracy", "Test Accuracy"
         ])
         self.metrics_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.metrics_table.setAlternatingRowColors(True)
@@ -346,27 +346,29 @@ class MonitorTab(QWidget):
         """Обновление графиков и таблицы метрик."""
         metric_values = []
 
-        epoch = metrics.get("epoch", 0)
-        loss = metrics.get("loss", 0)
-        test_loss = metrics.get("test_loss", 0)
+        epoch = metrics["epoch"]
+        loss = metrics["train_loss"]
+        test_loss = metrics["test_loss"]
         metric_values.extend([epoch, loss, test_loss])
         self._update_loss_plot(epoch, loss, test_loss)
 
         if "Accuracy" in self._selected_metrics:
-            acc = metrics.get("accuracy", 0)
-            test_acc = metrics.get("test_accuracy", 0)
+            acc = metrics["train_accuracy"]
+            test_acc = metrics["test_accuracy"]
             metric_values.extend([acc, test_acc])
             self._update_acc_plot(epoch, acc, test_acc)
 
         if "Precision" in self._selected_metrics:
-            precision = metrics.get("precision", 0)
+            precision = metrics["precision"]
             metric_values.append(precision)
         if "Recall" in self._selected_metrics:
-            recall = metrics.get("recall", 0)
+            recall = metrics["recall"]
             metric_values.append(recall)
         if "F1-Score" in self._selected_metrics:
-            f1 = metrics.get("f1-score", 0)
+            f1 = metrics["f1_score"]
             metric_values.append(f1)
+
+        print(metric_values)
 
         self._add_metrics_row(metric_values)
 
@@ -403,10 +405,10 @@ class MonitorTab(QWidget):
 
     def setup_metrics(self, metrics_list: list):
         """Настройка таблицы под выбранные метрики."""
-        columns = ["Эпоха", "Loss", "Test Loss"]
+        columns = ["Эпоха", "Train Loss", "Test Loss"]
 
         if "Accuracy" in metrics_list:
-            columns.extend(["Accuracy", "Test Accuracy"])
+            columns.extend(["Train Accuracy", "Test Accuracy"])
             self.acc_plot.setVisible(True)
         else:
             self.acc_plot.setVisible(False)
@@ -459,9 +461,9 @@ class MonitorTab(QWidget):
         has_accuracy = "Accuracy" in self._selected_metrics
         self.acc_plot.setVisible(has_accuracy)
 
-        columns = ["Эпоха", "Loss", "Test Loss"]
+        columns = ["Эпоха", "Train Loss", "Test Loss"]
         if "Accuracy" in self._selected_metrics:
-            columns.extend(["Accuracy", "Test Accuracy"])
+            columns.extend(["Train Accuracy", "Test Accuracy"])
         if "Precision" in self._selected_metrics:
             columns.extend(["Test Precision"])
         if "Recall" in self._selected_metrics:
