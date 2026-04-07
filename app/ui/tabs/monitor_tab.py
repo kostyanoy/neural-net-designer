@@ -108,6 +108,7 @@ class MonitorTab(QWidget):
         self.loss_plot.setLabel('bottom', 'Эпоха')
         self.loss_plot.addLegend()
         self.loss_plot.showGrid(x=True, y=True, alpha=0.3)
+        self.loss_plot.enableAutoRange(x=True, y=True)
         self.loss_plot_train = self.loss_plot.plot(pen='r', name='Train')
         self.loss_plot_test = self.loss_plot.plot(pen='b', name='Test')
 
@@ -117,6 +118,8 @@ class MonitorTab(QWidget):
         self.acc_plot.setLabel('bottom', 'Эпоха')
         self.acc_plot.addLegend()
         self.acc_plot.showGrid(x=True, y=True, alpha=0.3)
+        self.acc_plot.enableAutoRange(x=True, y=False)
+        self.acc_plot.setYRange(0, 1)
         self.acc_plot_train = self.acc_plot.plot(pen='r', name='Train')
         self.acc_plot_test = self.acc_plot.plot(pen='b', name='Test')
         self.acc_plot.setVisible(True)
@@ -435,6 +438,10 @@ class MonitorTab(QWidget):
         self.loss_plot_test.setData([], [])
         self.acc_plot_train.setData([], [])
         self.acc_plot_test.setData([], [])
+
+        self.loss_plot.enableAutoRange(x=True, y=True)
+        self.acc_plot.enableAutoRange(x=True, y=False)
+        self.acc_plot.setYRange(0, 1)
 
         self.metrics_table.setRowCount(0)
         self.log_console.clear()
