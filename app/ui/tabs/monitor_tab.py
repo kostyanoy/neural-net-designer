@@ -1,12 +1,13 @@
 import time
 
 from PyQt5 import QtCore
-from PyQt5.QtCore import pyqtSignal, QThread
+from PyQt5.QtCore import pyqtSignal, QThread, QTimer
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget, QSplitter, QGroupBox, QHBoxLayout, QPushButton, QFormLayout, \
-    QProgressBar, QGridLayout, QTabWidget, QTextEdit, QTableWidget, QHeaderView, QTableWidgetItem
+    QProgressBar, QGridLayout, QTabWidget, QTextEdit, QHeaderView, QTableWidgetItem, QTableWidget, QTableView
 from pyqtgraph import PlotWidget
 
 from core.training.training_worker import TrainingWorker
+from ui.widgets.MetricTableModel import MetricsTableModel
 
 
 class MonitorTab(QWidget):
@@ -30,6 +31,11 @@ class MonitorTab(QWidget):
         self._training_worker: TrainingWorker = None
         self._training_thread: QThread = None
         self._training_data = None
+
+        self._metrics_buffer = []
+        self._update_timer = QTimer(self)
+        self._update_timer.timeout.connect(self._flush_metrics)
+        self._update_timer.start(500)
 
         self._init_ui()
         self._connect_signals()
@@ -155,13 +161,14 @@ class MonitorTab(QWidget):
         log_layout.addWidget(self.log_console)
         log_layout.addLayout(log_btn_layout)
 
-        self.metrics_table = QTableWidget()
-        self.metrics_table.setColumnCount(5)
-        self.metrics_table.setHorizontalHeaderLabels([
-            "Эпоха", "Train Loss", "Test Loss", "Train Accuracy", "Test Accuracy"
-        ])
-        self.metrics_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.metrics_table.setAlternatingRowColors(True)
+        self.metrics_model = MetricsTableModel(["Эпоха", "Train Loss", "Test Loss", "Train Accuracy", "Test Accuracy"])
+        self.metrics_table = QTableView()
+        self.metrics_table.setModel(self.metrics_model)
+        self.metrics_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        self.metrics_table.setSelectionMode(QTableView.SelectionMode.NoSelection)
+        self.metrics_table.setAlternatingRowColors(False)
+        self.metrics_table.setShowGrid(False)
+        self.metrics_table.setSortingEnabled(False)
 
         table_btn_layout = QHBoxLayout()
         self.clear_table_btn = QPushButton("🗑️ Очистить")
@@ -271,6 +278,24 @@ class MonitorTab(QWidget):
         metrics["epoch"] += self._epoch_offset
         self.update_metrics(metrics)
 
+    def _flush_metrics(self):
+        if not self._metrics_buffer:
+            return
+
+        v_scroll = self.metrics_table.verticalScrollBar()
+        was_at_bottom = v_scroll.value() > v_scroll.maximum() - 2
+
+        self.metrics_table.setUpdatesEnabled(False)
+        self.metrics_model.add_rows(self._metrics_buffer)
+        self.metrics_table.setUpdatesEnabled(True)
+
+        if was_at_bottom:
+            self.metrics_table.scrollToBottom()
+
+        self._metrics_buffer.clear()
+
+
+
     def _cleanup_training(self):
         """Очистка после завершения обучения."""
         self._is_training = False
@@ -325,7 +350,7 @@ class MonitorTab(QWidget):
 
     def _on_clear_table_clicked(self):
         """Очистка таблицы метрик."""
-        self.metrics_table.setRowCount(0)
+        self.metrics_model.reset_data()
         self.append_log("Таблица метрик очищена")
 
     def append_log(self, message: str):
@@ -378,7 +403,7 @@ class MonitorTab(QWidget):
         if "F1-Score" in self._selected_metrics:
             table_data["Test F1-Score"] = metrics["f1_score"]
 
-        self._add_metrics_row(table_data)
+        self._metrics_buffer.append(table_data)
 
     def _update_loss_plot(self, epoch: int, loss: float, test_loss: float):
         """Обновление графика Loss."""
@@ -400,21 +425,6 @@ class MonitorTab(QWidget):
 
         self.acc_plot_train.setData(self.history["acc"]["x"], self.history["acc"]["train"])
         self.acc_plot_test.setData(self.history["acc"]["x"], self.history["acc"]["test"])
-
-    def _add_metrics_row(self, metric_values: dict):
-        """Добавление строки в таблицу метрик."""
-        row = self.metrics_table.rowCount()
-        self.metrics_table.insertRow(row)
-
-        for col_index in range(self.metrics_table.columnCount()):
-            header_item = self.metrics_table.horizontalHeaderItem(col_index)
-            header = header_item.text()
-            value = metric_values[header]
-            if header == "Эпоха":
-                self.metrics_table.setItem(row, col_index, QTableWidgetItem(f"{value}"))
-            else:
-                self.metrics_table.setItem(row, col_index, QTableWidgetItem(f"{value:.4f}"))
-        self.metrics_table.scrollToBottom()
 
     def reset(self):
         """Сброс состояния вкладки."""
@@ -443,7 +453,7 @@ class MonitorTab(QWidget):
         self.acc_plot.enableAutoRange(x=True, y=False)
         self.acc_plot.setYRange(0, 1)
 
-        self.metrics_table.setRowCount(0)
+        self.metrics_model.reset_data()
         self.log_console.clear()
 
         self.history = {
@@ -476,10 +486,7 @@ class MonitorTab(QWidget):
         if "F1-Score" in self._selected_metrics:
             columns.extend(["Test F1-Score"])
 
-        self.metrics_table.setColumnCount(len(columns))
-        self.metrics_table.setHorizontalHeaderLabels(columns)
-        self.metrics_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.metrics_table.setRowCount(0)
+        self.metrics_model.set_headers(columns)
 
     def set_training_data(self, training_data: dict):
         """Установить данные для обучения."""
