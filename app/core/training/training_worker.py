@@ -95,8 +95,9 @@ class TrainingWorker(QObject):
                     "f1_score": train_metrics["f1_score"],
                 }
                 self.epoch_completed.emit(metrics)
+                epoch_offset = self._training_data["epoch_offset"]
                 self.log_message.emit(
-                    f"Эпоха {epoch + 1}/{epochs} | "
+                    f"Эпоха {epoch_offset + epoch + 1}/{epoch_offset + epochs} | "
                     f"Train Loss: {metrics['train_loss']:.4f} | "
                     f"Test Loss: {metrics['test_loss']:.4f} | "
                     f"Train Acc: {metrics['train_accuracy']:.4f} | "

@@ -20,6 +20,7 @@ class MonitorTab(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._epoch_offset = 0
         self._elapsed_time = 0
         self._start_time = None
         self._pause_start_time = None
@@ -182,6 +183,12 @@ class MonitorTab(QWidget):
         if self._is_training:
             return
 
+        if self.history["loss"]["x"]:
+            self._epoch_offset = self.history["loss"]["x"][-1]
+        else:
+            self._epoch_offset = 0
+        training_data["epoch_offset"] = self._epoch_offset
+
         self._training_data = training_data
         self._training_worker = TrainingWorker(training_data)
         self._training_thread = QThread()
@@ -258,6 +265,7 @@ class MonitorTab(QWidget):
 
     def _on_epoch_completed(self, metrics: dict):
         """Завершение эпохи - обновление графиков и таблицы."""
+        metrics["epoch"] += self._epoch_offset
         self.update_metrics(metrics)
 
     def _cleanup_training(self):
@@ -325,9 +333,13 @@ class MonitorTab(QWidget):
 
     def update_progress(self, current: int, total: int):
         """Обновление прогресс-бара и меток эпох."""
-        self.progress_bar.setValue(current)
-        self.progress_bar.setMaximum(total)
-        self.epoch_label.setText(f"Эпоха: {current}/{total}")
+
+        display_current = self._epoch_offset + current
+        display_total = self._epoch_offset + total
+
+        self.progress_bar.setValue(display_current)
+        self.progress_bar.setMaximum(display_total)
+        self.epoch_label.setText(f"Эпоха: {display_current}/{display_total}")
 
         if self._start_time and not self._is_paused:
             elapsed = int(time.time() - self._start_time)
@@ -422,6 +434,7 @@ class MonitorTab(QWidget):
         self._start_time = None
         self._pause_start_time = None
         self._elapsed_time = 0
+        self._epoch_offset = 0
 
         self.start_btn.setEnabled(True)
         self.pause_btn.setEnabled(False)
@@ -476,6 +489,7 @@ class MonitorTab(QWidget):
 
     def set_training_data(self, training_data: dict):
         """Установить данные для обучения."""
+        self.reset()
         self._training_data = training_data
         self.start_btn.setEnabled(True)
         self.append_log("Данные для обучения загружены")
