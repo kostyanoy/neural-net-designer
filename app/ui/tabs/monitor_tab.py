@@ -217,6 +217,7 @@ class MonitorTab(QWidget):
         self.pause_btn.setEnabled(True)
         self.stop_btn.setEnabled(True)
         self.append_log("Обучение запущено")
+        self.training_started.emit()
 
     def _on_training_finished(self):
         """Обучение завершено."""
@@ -357,7 +358,6 @@ class MonitorTab(QWidget):
             test_acc = metrics["test_accuracy"]
             metric_values.extend([acc, test_acc])
             self._update_acc_plot(epoch, acc, test_acc)
-
         if "Precision" in self._selected_metrics:
             precision = metrics["precision"]
             metric_values.append(precision)
@@ -367,8 +367,6 @@ class MonitorTab(QWidget):
         if "F1-Score" in self._selected_metrics:
             f1 = metrics["f1_score"]
             metric_values.append(f1)
-
-        print(metric_values)
 
         self._add_metrics_row(metric_values)
 

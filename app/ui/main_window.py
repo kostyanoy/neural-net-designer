@@ -291,7 +291,7 @@ class MainWindow(QMainWindow):
 
     def _on_tab_changed(self, index: int):
         """Обработка переключения между вкладками."""
-        if self._training_locked:
+        if self._training_locked and index not in [2, 3]:
             self.tab_widget.setCurrentIndex(2)
             self.status_bar.showMessage("Нельзя переключаться во время обучения!")
             return
@@ -360,7 +360,7 @@ class MainWindow(QMainWindow):
 
     def _on_training_finished(self):
         """Разблокировка вкладок после завершения."""
-        self._training_locked = True
+        self._training_locked = False
         self._update_tab_locking()
         self.status_bar.showMessage("Обучение завершено - вкладки разблокированы")
 
