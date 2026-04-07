@@ -55,17 +55,13 @@ class TrainingWorker(QObject):
             metrics_list = params["metrics"]
 
             self.training_started.emit()
-            self.log_message.emit(f"Начало обучения: {epochs} эпох, устройство: {device}")
 
             for epoch in range(epochs):
                 if self._should_stop:
-                    self.log_message.emit("Обучение остановлено пользователем")
-                    self.training_stopped.emit()
                     return
 
                 while self._is_paused:
                     if self._should_stop:
-                        self.training_stopped.emit()
                         return
                     time.sleep(0.1)
 
@@ -78,6 +74,9 @@ class TrainingWorker(QObject):
                 test_metrics = self._validate_epoch(
                     model, test_loader, loss_fn, device
                 )
+
+                if self._should_stop:
+                    return
 
                 self._history["train_loss"].append(train_metrics["loss"])
                 self._history["test_loss"].append(test_metrics["loss"])
@@ -114,7 +113,6 @@ class TrainingWorker(QObject):
                 "final_epoch": epochs
             }
             self.training_finished.emit(final_metrics)
-            self.log_message.emit("Обучение завершено!")
         except Exception as e:
             error_msg = f"Ошибка обучения: {str(e)}"
             self.training_error.emit(error_msg)
@@ -127,6 +125,7 @@ class TrainingWorker(QObject):
         total_loss = 0.0
         all_pred = []
         all_targets = []
+        batches_processed = 0
 
         for data, target in loader:
             if self._should_stop:
@@ -144,21 +143,26 @@ class TrainingWorker(QObject):
             pred = output.argmax(dim=1)
             all_pred.extend(pred.cpu().numpy())
             all_targets.extend(target.cpu().numpy())
+            batches_processed += 1
 
-        avg_loss = total_loss / len(loader)
+        avg_loss = total_loss / max(batches_processed, 1)
         metrics = self._calculate_metrics(all_pred, all_targets)
         metrics["loss"] = avg_loss
         return metrics
 
     def _validate_epoch(self, model: nn.Module, loader: DataLoader, loss_fn: nn.Module, device) -> dict:
         """Одна эпоха валидации."""
-        model.train()
+        model.eval()
         total_loss = 0.0
         all_pred = []
         all_targets = []
+        batches_processed = 0
 
         with torch.no_grad():
             for data, target in loader:
+                if self._should_stop:
+                    break
+
                 data, target = data.to(device), target.to(device)
                 output = model(data)
                 loss = loss_fn(output, target)
@@ -167,8 +171,9 @@ class TrainingWorker(QObject):
                 pred = output.argmax(dim=1)
                 all_pred.extend(pred.cpu().numpy())
                 all_targets.extend(target.cpu().numpy())
+                batches_processed += 1
 
-        avg_loss = total_loss / len(loader)
+        avg_loss = total_loss / max(batches_processed, 1)
         metrics = self._calculate_metrics(all_pred, all_targets)
         metrics["loss"] = avg_loss
         return metrics
@@ -188,7 +193,7 @@ class TrainingWorker(QObject):
     def pause(self):
         """Поставить обучение на паузу."""
         if self._is_running and not self._is_paused:
-            self.is_paused = True
+            self._is_paused = True
             self.training_paused.emit()
 
     def resume(self):
@@ -201,3 +206,5 @@ class TrainingWorker(QObject):
         """Остановить обучение."""
         self._should_stop = True
         self._is_paused = False
+        self.training_stopped.emit()
+
