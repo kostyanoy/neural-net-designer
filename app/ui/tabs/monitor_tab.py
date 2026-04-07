@@ -99,8 +99,8 @@ class MonitorTab(QWidget):
     def _create_charts_area(self):
         """Создание области с графиками."""
         group = QGroupBox("📈 Графики")
-        layout = QGridLayout()
-        group.setLayout(layout)
+        self.charts_layout = QGridLayout()
+        group.setLayout(self.charts_layout)
 
         self.loss_plot = PlotWidget()
         self.loss_plot.setTitle("Loss")
@@ -121,11 +121,11 @@ class MonitorTab(QWidget):
         self.acc_plot_test = self.acc_plot.plot(pen='b', name='Test')
         self.acc_plot.setVisible(True)
 
-        layout.addWidget(self.loss_plot, 0, 0)
-        layout.addWidget(self.acc_plot, 0, 1)
+        self.charts_layout.addWidget(self.loss_plot, 0, 0)
+        self.charts_layout.addWidget(self.acc_plot, 0, 1)
 
-        layout.setColumnStretch(0, 1)
-        layout.setColumnStretch(1, 1)
+        self.charts_layout.setColumnStretch(0, 1)
+        self.charts_layout.setColumnStretch(1, 1)
 
         return group
 
@@ -413,20 +413,6 @@ class MonitorTab(QWidget):
                 self.metrics_table.setItem(row, col_index, QTableWidgetItem(f"{value:.4f}"))
         self.metrics_table.scrollToBottom()
 
-    def setup_metrics(self, metrics_list: list):
-        """Настройка таблицы под выбранные метрики."""
-        columns = ["Эпоха", "Train Loss", "Test Loss"]
-
-        if "Accuracy" in metrics_list:
-            columns.extend(["Train Accuracy", "Test Accuracy"])
-            self.acc_plot.setVisible(True)
-        else:
-            self.acc_plot.setVisible(False)
-
-        self.metrics_table.setColumnCount(len(columns))
-        self.metrics_table.setHorizontalHeaderLabels(columns)
-        self.metrics_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-
     def reset(self):
         """Сброс состояния вкладки."""
         self._is_training = False
@@ -471,6 +457,7 @@ class MonitorTab(QWidget):
         """Перенастроить UI под выбранные метрики"""
         has_accuracy = "Accuracy" in self._selected_metrics
         self.acc_plot.setVisible(has_accuracy)
+        self.charts_layout.setColumnStretch(1, int(has_accuracy))
 
         columns = ["Эпоха", "Train Loss", "Test Loss"]
         if "Accuracy" in self._selected_metrics:
