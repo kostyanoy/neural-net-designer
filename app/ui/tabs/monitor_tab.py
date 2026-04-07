@@ -357,30 +357,25 @@ class MonitorTab(QWidget):
 
     def update_metrics(self, metrics: dict):
         """Обновление графиков и таблицы метрик."""
-        metric_values = []
-
-        epoch = metrics["epoch"]
-        loss = metrics["train_loss"]
-        test_loss = metrics["test_loss"]
-        metric_values.extend([epoch, loss, test_loss])
-        self._update_loss_plot(epoch, loss, test_loss)
+        table_data = {
+            "Эпоха": metrics["epoch"],
+            "Train Loss": metrics["train_loss"],
+            "Test Loss": metrics["test_loss"]
+        }
+        self._update_loss_plot(metrics["epoch"], metrics["train_loss"], metrics["test_loss"])
 
         if "Accuracy" in self._selected_metrics:
-            acc = metrics["train_accuracy"]
-            test_acc = metrics["test_accuracy"]
-            metric_values.extend([acc, test_acc])
-            self._update_acc_plot(epoch, acc, test_acc)
+            table_data["Train Accuracy"] = metrics["train_accuracy"]
+            table_data["Test Accuracy"] = metrics["test_accuracy"]
+            self._update_acc_plot(metrics["epoch"], metrics["train_accuracy"], metrics["test_accuracy"])
         if "Precision" in self._selected_metrics:
-            precision = metrics["precision"]
-            metric_values.append(precision)
+            table_data["Test Precision"] = metrics["precision"]
         if "Recall" in self._selected_metrics:
-            recall = metrics["recall"]
-            metric_values.append(recall)
+            table_data["Test Recall"] = metrics["recall"]
         if "F1-Score" in self._selected_metrics:
-            f1 = metrics["f1_score"]
-            metric_values.append(f1)
+            table_data["Test F1-Score"] = metrics["f1_score"]
 
-        self._add_metrics_row(metric_values)
+        self._add_metrics_row(table_data)
 
     def _update_loss_plot(self, epoch: int, loss: float, test_loss: float):
         """Обновление графика Loss."""
@@ -403,14 +398,19 @@ class MonitorTab(QWidget):
         self.acc_plot_train.setData(self.history["acc"]["x"], self.history["acc"]["train"])
         self.acc_plot_test.setData(self.history["acc"]["x"], self.history["acc"]["test"])
 
-    def _add_metrics_row(self, metric_values: list):
+    def _add_metrics_row(self, metric_values: dict):
         """Добавление строки в таблицу метрик."""
         row = self.metrics_table.rowCount()
         self.metrics_table.insertRow(row)
 
-        for i, metric in enumerate(self._selected_metrics):
-            metric_value = metric_values[i]
-            self.metrics_table.setItem(row, i, QTableWidgetItem(f"{metric_value:.4f}"))
+        for col_index in range(self.metrics_table.columnCount()):
+            header_item = self.metrics_table.horizontalHeaderItem(col_index)
+            header = header_item.text()
+            value = metric_values[header]
+            if header == "Эпоха":
+                self.metrics_table.setItem(row, col_index, QTableWidgetItem(f"{value}"))
+            else:
+                self.metrics_table.setItem(row, col_index, QTableWidgetItem(f"{value:.4f}"))
         self.metrics_table.scrollToBottom()
 
     def setup_metrics(self, metrics_list: list):
