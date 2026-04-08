@@ -12,6 +12,8 @@ class ExportTab(QWidget):
     export_code_requested = pyqtSignal(str, str) # type, path
     export_weights_requested = pyqtSignal(str) # path
 
+    _CODE_TYPES = ["model", "dataset", "training_config", "training"]
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._current_code_type = "model"
@@ -22,8 +24,12 @@ class ExportTab(QWidget):
             "training": "",
         }
 
+        self._model_valid = False
+        self._dataset_valid = False
+
         self._init_ui()
         self._connect_signals()
+        self._update_ui()
 
     def _init_ui(self):
         """Инициализация всех UI элементов."""
@@ -62,7 +68,7 @@ class ExportTab(QWidget):
 
         layout.addStretch()
 
-        self.generate_btn = QPushButton("Загрузить / Сгенерировать")
+        self.generate_btn = QPushButton("Сгенерировать")
         self.generate_btn.clicked.connect(self._on_generate_clicked)
         layout.addWidget(self.generate_btn)
 
@@ -107,12 +113,41 @@ class ExportTab(QWidget):
 
         self.export_weights_btn = QPushButton("⚖️ Экспортировать веса модели (.pth)")
         self.export_weights_btn.clicked.connect(self._on_export_weights_clicked)
-        # self.export_weights_btn.setEnabled(False)
+        self.export_weights_btn.setEnabled(False)
         layout.addWidget(self.export_weights_btn)
 
         layout.addStretch()
 
         return group
+
+    def set_model_valid(self, is_valid: bool):
+        """Устанавливает статус валидности графа архитектуры."""
+        if self._model_valid != is_valid:
+            self._model_valid = is_valid
+            self._refresh_combobox()
+
+    def set_dataset_valid(self, is_valid: bool):
+        """Устанавливает статус валидности датасета."""
+        if self._dataset_valid != is_valid:
+            self._dataset_valid = is_valid
+            self._refresh_combobox()
+
+    def _update_ui(self):
+        """Обновляет доступность генерации."""
+        current_data = self.code_type_combo.currentData()
+
+        if self._current_code_type == "model":
+            can_generate = self._model_valid
+        elif self._current_code_type in ["dataset", "training_config", "training"]:
+            can_generate = self._dataset_valid
+        else:
+            can_generate = False
+
+        self.generate_btn.setEnabled(can_generate)
+        self.export_code_btn.setEnabled(self._model_valid)
+
+        if not can_generate and self._current_code_type:
+            self.status_label.setText("Для генерации этого типа кода необходимы валидные параметры")
 
     def _connect_signals(self):
         """Подключение внутренних сигналов."""
@@ -120,18 +155,23 @@ class ExportTab(QWidget):
 
     def _on_code_type_changed(self, index: int):
         """Обработка изменения типа кода."""
-        code_types = ["model", "dataset", "training_config", "training"]
-        self._current_code_type = code_types[index]
+        self._current_code_type = self._CODE_TYPES[index]
         self.status_label.setText(f"Выбран тип: {self.code_type_combo.currentText()}")
+        self._update_ui()
 
         if self._generated_code.get(self._current_code_type):
             self.code_editor.set_code(self._generated_code[self._current_code_type])
+        else:
+            self.code_editor.clear()
 
     def _on_generate_clicked(self):
         """Обработка кнопки генерации кода."""
+        if not self._current_code_type:
+            self.status_label.setText("Нет доступных типов кода. Проверьте валидность архитектуры и датасета.")
+            return
+
         self.status_label.setText("Генерация кода...")
         self.generate_code_requested.emit(self._current_code_type)
-
         # TODO генерирвоать код по шаблонам
 
     def _on_code_changed(self):
@@ -139,7 +179,6 @@ class ExportTab(QWidget):
         code = self.code_editor.get_code()
         char_count = len(code)
         self.char_count_label.setText(f"{char_count} символов")
-
         self.export_code_btn.setEnabled(char_count > 0)
 
     def _on_export_code_clicked(self):
@@ -154,7 +193,6 @@ class ExportTab(QWidget):
             "training_config": "Python Files (*.py)",
             "training": "Python Files (*.py)"
         }
-
         default_name = {
             "model": "model.py",
             "dataset": "dataset.py",

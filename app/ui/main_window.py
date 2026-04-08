@@ -56,8 +56,9 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.monitor_tab, "📊 Мониторинг")
         self.tab_widget.addTab(self.export_tab, "💾 Экспорт")
 
-        for i in range(1, 4):
+        for i in range(1, 3):
             self.tab_widget.setTabEnabled(i, False)
+        self.tab_widget.setTabEnabled(3, True)
 
     def _init_docks(self):
         """Подключение Dock"""
@@ -108,10 +109,12 @@ class MainWindow(QMainWindow):
         self.architecture_tab.graph.node_selected.connect(self._on_node_selected)
         self.architecture_tab.validation_changed.connect(self._on_architecture_validation_changed)
         self.architecture_tab.proceed_requested.connect(self._on_proceed_to_training)
+        self.architecture_tab.validation_changed.connect(self.export_tab.set_model_valid)
 
         # --- Training Tab ---
         self.training_tab.proceed_requested.connect(self._on_proceed_to_monitor)
         self.training_tab.validation_changed.connect(self._on_training_validation_changed)
+        self.training_tab.data_widget.dataset_valid.connect(self.export_tab.set_dataset_valid)
 
         # --- Monitor Tab ---
         self.monitor_tab.training_started.connect(self._on_training_started)
@@ -325,7 +328,7 @@ class MainWindow(QMainWindow):
     def _on_architecture_validation_changed(self, is_valid: bool):
         """Блокировка/разблокировка вкладок в зависимости от валидации"""
         if not is_valid:
-            for i in range(1, 4):
+            for i in range(1, 3):
                 self.tab_widget.setTabEnabled(i, False)
         else:
             self.tab_widget.setTabEnabled(1, True)
@@ -338,10 +341,8 @@ class MainWindow(QMainWindow):
         """Блокировка/разблокировка вкладок в зависимости от валидации"""
         if not is_valid:
             self.tab_widget.setTabEnabled(2, False)
-            self.tab_widget.setTabEnabled(3, False)
         else:
             self.tab_widget.setTabEnabled(2, True)
-            self.tab_widget.setTabEnabled(3, True)
 
     def _on_proceed_to_monitor(self):
         """Переход на вкладку мониторинга"""
