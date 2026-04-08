@@ -1,7 +1,7 @@
 import time
 
 import torch
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal, QThread
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from torch import nn
 from torch.optim import Optimizer
@@ -63,7 +63,7 @@ class TrainingWorker(QObject):
                 while self._is_paused:
                     if self._should_stop:
                         return
-                    time.sleep(0.1)
+                    QThread.msleep(100)
 
                 self.epoch_started.emit(epoch + 1)
                 self.progress_updated.emit(epoch + 1, epochs)

@@ -100,7 +100,7 @@ class PropertyPanel(QWidget):
         elif isinstance(prop_def, CheckboxProperty):
             widget = QCheckBox()
             widget.stateChanged.connect(lambda v: self._on_property_changed(prop_name, v == 2))
-        elif type(prop_def) == SliderProperty:
+        elif isinstance(prop_def, SliderProperty):
             _min = prop_def.min_value
             _max = prop_def.max_value
             _step = prop_def.step
@@ -148,7 +148,7 @@ class PropertyPanel(QWidget):
         elif isinstance(prop_def, CheckboxProperty):
             widget.setChecked(bool(value))
         elif isinstance(prop_def, SliderProperty):
-            widget.setValue(int(value / prop_def["step"]))
+            widget.setValue(int(value / prop_def.step))
             self.property_containers[f"{prop_name}_value"].setText(str(round(value, 4)))
 
 

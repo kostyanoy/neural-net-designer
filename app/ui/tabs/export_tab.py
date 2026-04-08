@@ -121,7 +121,7 @@ class ExportTab(QWidget):
     def _on_code_type_changed(self, index: int):
         """Обработка изменения типа кода."""
         code_types = ["model", "dataset", "training_config", "training"]
-        self.current_code_type = code_types[index]
+        self._current_code_type = code_types[index]
         self.status_label.setText(f"Выбран тип: {self.code_type_combo.currentText()}")
 
         if self._generated_code.get(self._current_code_type):

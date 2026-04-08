@@ -86,8 +86,11 @@ class GraphCompiler:
                 if in_degree[neighbor] == 0:
                     queue.append(neighbor)
 
-        assert len(result) == len(
-            node_names), f"Обнаружен цикл в графе: количество узлов {len(node_names)} не равно полученному алгоритмом {len(result)}"
+        if len(result) != len(node_names):
+            raise ValueError(
+                f"Обнаружен цикл в графе: "
+                f"количество узлов {len(node_names)} не равно полученному алгоритмом {len(result)}"
+            )
         return result
 
     @staticmethod

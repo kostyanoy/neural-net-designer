@@ -9,6 +9,7 @@ class SplitLayer(nn.Module):
 
     def __init__(self):
         super().__init__()
+        # TODO сделать динамическим
         self.num_outputs = 2
 
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:

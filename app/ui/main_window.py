@@ -351,6 +351,10 @@ class MainWindow(QMainWindow):
             if training_data:
                 self.monitor_tab.set_training_data(training_data)
                 self.tab_widget.setCurrentIndex(2)
+            else:
+                self.status_bar.showMessage("Данные не корректны")
+        else:
+            self.status_bar.showMessage("Модель не корректна")
 
     def _on_training_started(self):
         """Блокировка вкладок во время обучения."""
