@@ -11,6 +11,7 @@ from torch.utils.data import TensorDataset
 from torchvision import transforms, datasets
 
 from ui.dialog.message_boxes import choose_file_dataset, choose_dir_dataset
+from config import DATASETS_DIR
 
 
 class DataWidget(QWidget):
@@ -353,13 +354,15 @@ class DatasetLoaderWorker(QObject):
     @staticmethod
     def _load_mnist_impl():
         """Загрузка датасета MNIST."""
+        Path(DATASETS_DIR).mkdir(exist_ok=True, parents=True)
+
         transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,))
         ])
 
-        train_dataset = datasets.MNIST(root="./data", train=True, download=True, transform=transform)
-        test_dataset = datasets.MNIST(root="./data", train=False, download=True, transform=transform)
+        train_dataset = datasets.MNIST(root=DATASETS_DIR, train=True, download=True, transform=transform)
+        test_dataset = datasets.MNIST(root=DATASETS_DIR, train=False, download=True, transform=transform)
 
         return {
             "name": "MNIST",

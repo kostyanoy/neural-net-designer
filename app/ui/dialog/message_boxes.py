@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
+
+from config import PROJECTS_DIR
 
 
 def save_changes_box(parent=None):
@@ -14,19 +18,27 @@ def save_changes_box(parent=None):
 
 def choose_open_file(parent=None):
     """Диалог выбора файла проекта для открытия."""
+    open_dir = Path(PROJECTS_DIR)
+    open_dir.mkdir(parents=True, exist_ok=True)
+
     return QFileDialog.getOpenFileName(
         parent,
         "Открыть проект",
+        directory=str(open_dir),
         filter="Project Files (*.nnd);;All files (*)"
     )
 
 
 def choose_save_file(parent=None, name="Untitled"):
     """Диалог выбора файла для сохранения проекта."""
+    save_dir = Path(PROJECTS_DIR)
+    save_dir.mkdir(parents=True, exist_ok=True)
+    save_path = str(save_dir / f"{name}.nnd")
+
     return QFileDialog.getSaveFileName(
         parent,
         "Сохранить проект как",
-        f"{name}.nnd",
+        save_path,
         "Project Files (*.nnd);;All Files (*)"
     )
 
