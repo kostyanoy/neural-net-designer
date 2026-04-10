@@ -164,6 +164,7 @@ class ArchitectureTab(QWidget):
                 node_id = raw_data.data().decode('utf-8')
                 scene_pos = self.graph_view.mapToScene(event.pos())
                 self.graph.create_node(node_id, pos=(scene_pos.x(), scene_pos.y()))
+                self._on_nodes_selected()
                 event.acceptProposedAction()
                 return True
 
@@ -220,8 +221,9 @@ class ArchitectureTab(QWidget):
         if self._is_valid:
             self.proceed_requested.emit()
 
-    def _on_nodes_selected(self, nodes: list[MyBaseNode]):
+    def _on_nodes_selected(self):
         """При выборе узла - загрузить его свойства в правую панель"""
+        nodes = self.graph.selected_nodes()
         if len(nodes) == 0:
             self.property_panel.set_node(None)
         else:

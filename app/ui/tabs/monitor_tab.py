@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget, QSplitter, QGroupBox, 
 from pyqtgraph import PlotWidget
 
 from core.training.training_worker import TrainingWorker
-from ui.widgets.MetricTableModel import MetricsTableModel
+from ui.widgets.metric_table_model import MetricsTableModel
 
 
 class MonitorTab(QWidget):
