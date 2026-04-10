@@ -93,9 +93,11 @@ class MonitorTab(QWidget):
         self.progress_bar.setValue(0)
         progress_layout.addRow(self.progress_bar)
 
-        self.epoch_label = QLabel("Эпоха 0/0")
+        self.epoch_label = QLabel("Эпоха: 0/0")
+        self.batch_label = QLabel("Batch: 0/0")
         self.time_label = QLabel("⏱️ 00:00 | ETA: --:--")
         progress_layout.addRow(self.epoch_label)
+        progress_layout.addRow(self.batch_label)
         progress_layout.addRow(self.time_label)
 
         layout.addLayout(progress_layout)
@@ -213,7 +215,8 @@ class MonitorTab(QWidget):
         self._training_worker.epoch_started.connect(self._on_epoch_started)
         self._training_worker.epoch_completed.connect(self._on_epoch_completed)
         self._training_worker.log_message.connect(self.append_log)
-        self._training_worker.progress_updated.connect(self.update_progress)
+        self._training_worker.epoch_progress_updated.connect(self._on_update_epoch_progress)
+        self._training_worker.batch_progress_updated.connect(self._on_batch_progress_updated)
 
         self._training_thread.started.connect(self._training_worker.run)
         self._training_thread.start()
@@ -359,7 +362,7 @@ class MonitorTab(QWidget):
         self.log_console.append(f"[{timestamp}] {message}")
         self.log_console.verticalScrollBar().setValue(self.log_console.verticalScrollBar().maximum())
 
-    def update_progress(self, current: int, total: int):
+    def _on_update_epoch_progress(self, current: int, total: int):
         """Обновление прогресс-бара и меток эпох."""
 
         display_current = self._epoch_offset + current
@@ -382,6 +385,10 @@ class MonitorTab(QWidget):
                 eta_str = "--:--"
 
             self.time_label.setText(f"⏱️ {elapsed_str} | ETA: {eta_str}")
+
+    def _on_batch_progress_updated(self, current: int, total: int):
+        """Обновление метки текущего батча внутри эпохи."""
+        self.batch_label.setText(f"Batch: {current}/{total}")
 
     def update_metrics(self, metrics: dict):
         """Обновление графиков и таблицы метрик."""
@@ -442,6 +449,7 @@ class MonitorTab(QWidget):
 
         self.progress_bar.setValue(0)
         self.epoch_label.setText("Эпоха: 0/0")
+        self.batch_label.setText("Batch: 0/0")
         self.time_label.setText("⏱️ 00:00 | ETA: --:--")
 
         self.loss_plot_train.setData([], [])

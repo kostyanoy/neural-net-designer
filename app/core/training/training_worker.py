@@ -19,7 +19,8 @@ class TrainingWorker(QObject):
     training_finished = pyqtSignal(dict)  # final metrics
     training_error = pyqtSignal(str)
     log_message = pyqtSignal(str)
-    progress_updated = pyqtSignal(int, int)  # current, total
+    epoch_progress_updated = pyqtSignal(int, int)  # current_epoch, total_epochs
+    batch_progress_updated = pyqtSignal(int, int)  # current_batch, total_batches
 
     def __init__(self, training_data):
         super().__init__()
@@ -66,7 +67,7 @@ class TrainingWorker(QObject):
                     QThread.msleep(100)
 
                 self.epoch_started.emit(epoch + 1)
-                self.progress_updated.emit(epoch + 1, epochs)
+                self.epoch_progress_updated.emit(epoch + 1, epochs)
 
                 train_metrics = self._train_epoch(
                     model, train_loader, optimizer, loss_fn, device
@@ -127,6 +128,7 @@ class TrainingWorker(QObject):
         all_targets = []
         batches_processed = 0
 
+        total_bathes = len(loader)
         for data, target in loader:
             if self._should_stop:
                 break
@@ -143,7 +145,9 @@ class TrainingWorker(QObject):
             pred = output.argmax(dim=1)
             all_pred.extend(pred.cpu().numpy())
             all_targets.extend(target.cpu().numpy())
+
             batches_processed += 1
+            self.batch_progress_updated.emit(batches_processed, total_bathes)
 
         avg_loss = total_loss / max(batches_processed, 1)
         metrics = self._calculate_metrics(all_pred, all_targets)
