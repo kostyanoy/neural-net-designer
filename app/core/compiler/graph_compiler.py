@@ -63,13 +63,13 @@ class GraphCompiler:
         return factory(node)
 
     @staticmethod
-    def _propagate_shapes(graph: NodeGraph) -> tuple[bool, str]:
+    def _propagate_shapes(graph: NodeGraph) -> tuple[bool, str, dict]:
         """Распространяет размерности через граф"""
         nodes = graph.all_nodes()
         connections = GraphCompiler._get_all_connections(nodes)
         execution_order = GraphCompiler._topological_sort(nodes, connections)
-        shapes = {}
 
+        shapes = {}
         for node_name in execution_order:
             node = GraphCompiler._find_node_by_name(nodes, node_name)
             input_shapes = GraphCompiler._get_input_shapes_for_node(node_name, connections, shapes)
@@ -78,13 +78,12 @@ class GraphCompiler:
 
             is_valid, error_msg = node.validate_shape(input_shapes)
             if not is_valid:
-                return False, error_msg
+                return False, error_msg, {}
 
             output_shape = node.transform_shape(input_shapes)
             shapes[node_name] = output_shape
 
-        print(shapes)
-        return True, ""
+        return True, "", shapes
 
     @staticmethod
     def _get_input_shapes_for_node(node_name: str, connections: List[Dict], shapes: Dict) -> List[tuple]:
@@ -191,11 +190,11 @@ class GraphCompiler:
         except ValueError as e:
             return {"is_valid": False, "error": "Обнаружен цикл в графе"}
 
-        is_valid, error_msg = GraphCompiler._propagate_shapes(graph)
+        is_valid, error_msg, shapes = GraphCompiler._propagate_shapes(graph)
         if not is_valid:
             return {"is_valid": False, "error": error_msg}
 
-        return {"is_valid": True, "error": ""}
+        return {"is_valid": True, "error": "", "shapes": shapes}
 
     @staticmethod
     def _check_connectivity(nodes: List[MyBaseNode]) -> Dict:

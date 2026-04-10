@@ -24,7 +24,6 @@ class ProjectManager(QObject):
         self.current_project = self._create_empty_project(name)
         self.project_path = None
         self.project_loaded.emit(self.current_project)
-        self.project_changed.emit()
         return self.current_project
 
     def _create_empty_project(self, name: str = "Untitled") -> dict:

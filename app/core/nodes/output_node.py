@@ -8,3 +8,7 @@ class OutputNode(MyBaseNode):
     def _init_ports(self):
         """Инициализация портов узла Output."""
         self.add_input_port("input")
+
+    def transform_shape(self, input_shape: tuple) -> tuple | None:
+        """Возвращает размерность выхода Output узла"""
+        return None

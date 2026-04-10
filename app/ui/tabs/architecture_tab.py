@@ -32,8 +32,6 @@ class ArchitectureTab(QWidget):
         self._compiled_model = None
         self._is_valid = False
 
-        self.graph.create_node("neural_net.DenseNode")
-
     def _init_ui(self):
         """Инициализация UI элементов вкладки архитектуры."""
         layout = QVBoxLayout()
@@ -193,12 +191,29 @@ class ArchitectureTab(QWidget):
             self._is_valid = True
             self.next_btn.setEnabled(True)
             self.validation_label.setText("✅ Граф валиден!")
+            self._apply_shapes_to_nodes(validation_result["shapes"])
         else:
             self._is_valid = False
             self.next_btn.setEnabled(False)
             self.validation_label.setText(validation_result["error"])
+            self._apply_shapes_to_nodes({})
         self.validation_changed.emit(self._is_valid)
         return validation_result
+
+    def _apply_shapes_to_nodes(self, shapes: dict):
+        """Обновляет отображение размерностей на всех узлах графа."""
+        connections = self._graph_compiler._get_all_connections(self.graph.all_nodes())
+
+        for node in self.graph.all_nodes():
+            node_name = node.name()
+            input_shape = None
+            output_shape = shapes.get(node_name)
+
+            for conn in connections:
+                if conn["to_node"] == node_name:
+                    input_shape = shapes.get(conn["from_node"])
+
+            node.update_shape_display(input_shapes=input_shape, output_shape=output_shape)
 
     def _on_next_clicked(self):
         """Переход на вкладку обучения"""

@@ -1,4 +1,6 @@
 from NodeGraphQt import BaseNode
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QGraphicsTextItem
 
 from core.nodes.properties import Property
 
@@ -13,10 +15,12 @@ class MyBaseNode(BaseNode):
 
     def __init__(self):
         super().__init__()
+        self._dim_label = None
+        self.node_type = self.NODE_NAME
+
         self._init_ports()
         self._init_properties()
-
-        self.node_type = self.NODE_NAME
+        self._init_shape_labels()
 
     def _init_properties(self):
         """Инициализирует свойства БЕЗ UI виджетов в узле"""
@@ -27,6 +31,32 @@ class MyBaseNode(BaseNode):
     def _init_ports(self):
         """Инициализация портов узла"""
         pass
+
+    def _init_shape_labels(self):
+        """Создаёт пустые текстовые метки для узла."""
+        self._dim_label = QGraphicsTextItem("(123,) -> (12,)", self.view)
+        self._dim_label.setDefaultTextColor(QColor(255, 255, 255))
+        px, py = self.view.x(), self.view.y()
+        self._dim_label.setPos(px + 30, py - 20)
+
+    def update_shape_display(self, input_shapes: dict = None, output_shape: tuple = None):
+        """Обновляет текст и позиции меток размерностей."""
+        if input_shapes is None and output_shape is None:
+            self._dim_label.setPlainText("")
+        elif input_shapes is None:
+            self._dim_label.setPlainText(f"{output_shape}")
+        elif output_shape is None:
+            self._dim_label.setPlainText(f"{input_shapes}")
+        else:
+            self._dim_label.setPlainText(f"{input_shapes} -> {output_shape}")
+
+        node_rect = self.view.boundingRect()
+        text_rect = self._dim_label.boundingRect()
+
+        x = (node_rect.width() - text_rect.width()) / 2
+        y = -text_rect.height()
+        self._dim_label.setPos(x, y)
+
 
     def add_input_port(self, name):
         """Создание входного порта"""
