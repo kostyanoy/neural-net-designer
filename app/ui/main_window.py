@@ -112,6 +112,7 @@ class MainWindow(QMainWindow):
         self.architecture_tab.validation_changed.connect(self._on_architecture_validation_changed)
         self.architecture_tab.proceed_requested.connect(self._on_proceed_to_training)
         self.architecture_tab.validation_changed.connect(self.export_tab.set_model_valid)
+        self.architecture_tab.undo_redo_state_changed.connect(self._update_undo_redo_ui)
 
         # --- Training Tab ---
         self.training_tab.proceed_requested.connect(self._on_proceed_to_monitor)
@@ -153,6 +154,7 @@ class MainWindow(QMainWindow):
 
         self.project_manager.create_new_project()
         self.architecture_tab.graph.clear_session()
+        self.architecture_tab.reset_undo_redo()
         self.training_tab.clear_session()
         self.status_bar.showMessage("Создан новый проект")
 
@@ -211,15 +213,13 @@ class MainWindow(QMainWindow):
 
     def _on_undo(self):
         """Обработка отмены последнего действия."""
-        # TODO
-        self.status_bar.showMessage("Action: Undo")
-        print("Undo requested")
+        self.architecture_tab.undo()
+        self.status_bar.showMessage("Действие отменено")
 
     def _on_redo(self):
         """Обработка повтора отмененного действия."""
-        # TODO
-        self.status_bar.showMessage("Action: Redo")
-        print("Redo requested")
+        self.architecture_tab.redo()
+        self.status_bar.showMessage("Действие повторено")
 
     def _on_delete(self):
         """Удаление выбранных узлов."""
@@ -323,6 +323,10 @@ class MainWindow(QMainWindow):
         self.left_dock.setVisible(is_architecture_tab)
         self.right_dock.setVisible(is_architecture_tab)
 
+        can_undo = is_architecture_tab and self.architecture_tab._undo_manager.can_undo
+        can_redo = is_architecture_tab and self.architecture_tab._undo_manager.can_redo
+        self._update_undo_redo_ui(can_undo, can_redo)
+
         if is_monitor_tab:
             training = self.training_tab.get_config()
             metrics = training["training_config"]["metrics"]
@@ -342,6 +346,10 @@ class MainWindow(QMainWindow):
                 self.tab_widget.setTabEnabled(i, False)
         else:
             self.tab_widget.setTabEnabled(1, True)
+
+    def _update_undo_redo_ui(self, can_undo: bool, can_redo: bool):
+        """Обновляет состояние кнопок и пунктов меню."""
+        self.menu_bar.set_undo_redo_enabled(can_undo, can_redo)
 
     def _on_proceed_to_training(self):
         """Переход на вкладку обучения"""

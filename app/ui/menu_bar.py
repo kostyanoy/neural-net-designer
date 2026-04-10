@@ -137,15 +137,15 @@ class CustomMenuBar(QMenuBar):
 
         edit_menu.addSeparator()
 
-        copy_action = QAction("&Copy", self)
-        copy_action.setShortcut("Ctrl+C")
-        copy_action.triggered.connect(self.copy_triggered.emit)
-        edit_menu.addAction(copy_action)
+        self.copy_action = QAction("&Copy", self)
+        self.copy_action.setShortcut("Ctrl+C")
+        self.copy_action.triggered.connect(self.copy_triggered.emit)
+        edit_menu.addAction(self.copy_action)
 
-        paste_action = QAction("&Paste", self)
-        paste_action.setShortcut("Ctrl+V")
-        paste_action.triggered.connect(self.paste_triggered.emit)
-        edit_menu.addAction(paste_action)
+        self.paste_action = QAction("&Paste", self)
+        self.paste_action.setShortcut("Ctrl+V")
+        self.paste_action.triggered.connect(self.paste_triggered.emit)
+        edit_menu.addAction(self.paste_action)
 
     def _create_view_menu(self):
         """Создает меню 'View' с настройками отображения и темой."""
@@ -212,12 +212,19 @@ class CustomMenuBar(QMenuBar):
         about_action.triggered.connect(self.about_triggered.emit)
         help_menu.addAction(about_action)
 
+    def set_undo_redo_enabled(self, can_undo: bool, can_redo: bool):
+        """Включает/выключает пункты Undo и Redo в меню."""
+        self.undo_action.setEnabled(can_undo)
+        self.redo_action.setEnabled(can_redo)
+
     def set_edit_actions_enabled(self, enabled: bool):
         """Включает или выключает действия меню Edit."""
         self.undo_action.setEnabled(enabled)
         self.redo_action.setEnabled(enabled)
         self.delete_action.setEnabled(enabled)
         self.select_all_action.setEnabled(enabled)
+        self.copy_action.setEnabled(enabled)
+        self.paste_action.setEnabled(enabled)
 
     def set_view_actions_enabled(self, enabled: bool):
         """Включает или выключает действия меню View."""

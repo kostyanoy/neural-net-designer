@@ -12,6 +12,7 @@ from core.nodes import ActivationNode, FlattenNode, InputNode, OutputNode, Merge
 from core.nodes.base_node import MyBaseNode
 from core.nodes.dense_node import DenseNode
 from core.project_manager import ProjectManager
+from core.undo_redo_manager import UndoRedoManager
 from ui.widgets.draggable_list_widget import DraggableListWidget
 from ui.widgets.property_panel import PropertyPanel
 
@@ -20,17 +21,22 @@ class ArchitectureTab(QWidget):
     """Вкладка для визуального проектирования архитектуры нейросети."""
     validation_changed = pyqtSignal(bool)
     proceed_requested = pyqtSignal()
+    undo_redo_state_changed = pyqtSignal(bool, bool)  # (can_undo, can_redo)
 
     def __init__(self, parent, project_manager: ProjectManager):
         super().__init__(parent)
-        self._init_ui()
-        self._register_nodes()
-        self._connect_signals()
 
         self._project_manager = project_manager
         self._graph_compiler = GraphCompiler()
         self._compiled_model = None
         self._is_valid = False
+        self._undo_manager = UndoRedoManager()
+        self._is_restoring = False  # Флаг защиты от рекурсии при десериализации
+
+        self._init_ui()
+        self._register_nodes()
+        self._connect_signals()
+        self._save_current_state()
 
     def _init_ui(self):
         """Инициализация UI элементов вкладки архитектуры."""
@@ -182,8 +188,26 @@ class ArchitectureTab(QWidget):
 
     def _on_graph_changed(self):
         """Обработка изменений в графе."""
+        if self._is_restoring:
+            return
+        self._save_current_state()
         self._on_validate_graph()
         self._project_manager.project_changed.emit()
+
+    def _save_current_state(self):
+        """Сохраняет текущий граф в стек undo."""
+        state = self.serialize_graph()
+        self._undo_manager.push(state)
+        self.refresh_undo_redo_state()
+
+    def reset_undo_redo(self):
+        """Сбрасывает историю undo/redo (например, при создании нового проекта)."""
+        self._undo_manager.clear()
+        self.refresh_undo_redo_state()
+
+    def refresh_undo_redo_state(self):
+        """Принудительно обновляет UI состояние кнопок Undo/Redo."""
+        self.undo_redo_state_changed.emit(self._undo_manager.can_undo, self._undo_manager.can_redo)
 
     def _on_validate_graph(self):
         """Проверка графа на корректность"""
@@ -235,6 +259,28 @@ class ArchitectureTab(QWidget):
             self.property_panel.update_property_value(prop_name, prop_value)
         self._on_graph_changed()
 
+    def undo(self):
+        """Отмена последнего действия."""
+        if not self._undo_manager.can_undo:
+            return
+        self._is_restoring = True
+        prev_state = self._undo_manager.undo()
+        if prev_state:
+            self.graph.deserialize_session(prev_state)
+        self._is_restoring = False
+        self.refresh_undo_redo_state()
+
+    def redo(self):
+        """Повтор отменённого действия."""
+        if not self._undo_manager.can_redo:
+            return
+        self._is_restoring = True
+        next_state = self._undo_manager.redo()
+        if next_state:
+            self.graph.deserialize_session(next_state)
+        self._is_restoring = False
+        self.refresh_undo_redo_state()
+
     def delete_selected_nodes(self):
         """Удаляет выбранные узлы и обновляет валидацию."""
         selected = self.graph.selected_nodes()
@@ -270,7 +316,12 @@ class ArchitectureTab(QWidget):
     def deserialize_graph(self, data: dict):
         """Восстановить граф из данных проекта."""
         try:
+            self._undo_manager.clear()
+            self._is_restoring = True
             self.graph.deserialize_session(data)
+            self._is_restoring = False
+            self._save_current_state()
+            self.refresh_undo_redo_state()
         except Exception as e:
             print(f"Error deserializing graph: {e}")
 
