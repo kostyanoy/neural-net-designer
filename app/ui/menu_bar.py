@@ -19,6 +19,8 @@ class CustomMenuBar(QMenuBar):
     redo_triggered = pyqtSignal()
     delete_triggered = pyqtSignal()
     select_all_triggered = pyqtSignal()
+    copy_triggered = pyqtSignal()
+    paste_triggered = pyqtSignal()
 
     # Сигналы View
     zoom_in_triggered = pyqtSignal()
@@ -132,6 +134,18 @@ class CustomMenuBar(QMenuBar):
         self.select_all_action.setShortcut("Ctrl+A")
         self.select_all_action.triggered.connect(self.select_all_triggered.emit)
         edit_menu.addAction(self.select_all_action)
+
+        edit_menu.addSeparator()
+
+        copy_action = QAction("&Copy", self)
+        copy_action.setShortcut("Ctrl+C")
+        copy_action.triggered.connect(self.copy_triggered.emit)
+        edit_menu.addAction(copy_action)
+
+        paste_action = QAction("&Paste", self)
+        paste_action.setShortcut("Ctrl+V")
+        paste_action.triggered.connect(self.paste_triggered.emit)
+        edit_menu.addAction(paste_action)
 
     def _create_view_menu(self):
         """Создает меню 'View' с настройками отображения и темой."""

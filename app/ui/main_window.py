@@ -84,6 +84,8 @@ class MainWindow(QMainWindow):
         self.menu_bar.redo_triggered.connect(self._on_redo)
         self.menu_bar.delete_triggered.connect(self._on_delete)
         self.menu_bar.select_all_triggered.connect(self._on_select_all)
+        self.menu_bar.copy_triggered.connect(self._on_copy)
+        self.menu_bar.paste_triggered.connect(self._on_paste)
 
         # --- View ---
         self.menu_bar.zoom_in_triggered.connect(self._on_zoom_in)
@@ -220,16 +222,24 @@ class MainWindow(QMainWindow):
         print("Redo requested")
 
     def _on_delete(self):
-        """Обработка удаления выбранных элементов."""
-        # TODO
-        self.status_bar.showMessage("Action: Delete")
-        print("Delete requested")
+        """Удаление выбранных узлов."""
+        self.architecture_tab.delete_selected_nodes()
+        self.status_bar.showMessage("Удалены выбранные узлы")
 
     def _on_select_all(self):
-        """Обработка выделения всех элементов на канвасе."""
-        # TODO
-        self.status_bar.showMessage("Action: Select All")
-        print("Select All requested")
+        """Выделение всех узлов на канвасе."""
+        self.architecture_tab.select_all_nodes()
+        self.status_bar.showMessage("Выделены все узлы")
+
+    def _on_copy(self):
+        """Копирование выбранных узлов."""
+        self.architecture_tab.copy_selected_nodes()
+        self.status_bar.showMessage("Узлы скопированы в буфер")
+
+    def _on_paste(self):
+        """Вставка узлов из буфера."""
+        self.architecture_tab.paste_nodes()
+        self.status_bar.showMessage("Узлы вставлены из буфера")
 
     # --- Слоты: View ---
 

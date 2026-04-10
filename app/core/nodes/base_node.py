@@ -34,7 +34,7 @@ class MyBaseNode(BaseNode):
 
     def _init_shape_labels(self):
         """Создаёт пустые текстовые метки для узла."""
-        self._dim_label = QGraphicsTextItem("(123,) -> (12,)", self.view)
+        self._dim_label = QGraphicsTextItem("", self.view)
         self._dim_label.setDefaultTextColor(QColor(255, 255, 255))
         px, py = self.view.x(), self.view.y()
         self._dim_label.setPos(px + 30, py - 20)

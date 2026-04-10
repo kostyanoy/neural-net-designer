@@ -235,6 +235,26 @@ class ArchitectureTab(QWidget):
             self.property_panel.update_property_value(prop_name, prop_value)
         self._on_graph_changed()
 
+    def delete_selected_nodes(self):
+        """Удаляет выбранные узлы и обновляет валидацию."""
+        selected = self.graph.selected_nodes()
+        if selected:
+            self.graph.delete_nodes(selected)
+
+    def select_all_nodes(self):
+        """Выделяет все узлы на канвасе."""
+        self.graph.select_all()
+
+    def copy_selected_nodes(self):
+        """Копирует выбранные узлы во внутренний буфер NodeGraph."""
+        selected = self.graph.selected_nodes()
+        if selected:
+            self.graph.copy_nodes(selected)
+
+    def paste_nodes(self):
+        """Вставляет узлы из буфера. Сдвигает координаты для удобства."""
+        self.graph.paste_nodes()
+
     def _on_property_changed(self, prop_name: str, prop_value: object):
         """Обработка изменения свойства из панели"""
         self._project_manager.project_changed.emit()
