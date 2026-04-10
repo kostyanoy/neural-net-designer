@@ -124,18 +124,16 @@ class ExportTab(QWidget):
         """Устанавливает статус валидности графа архитектуры."""
         if self._model_valid != is_valid:
             self._model_valid = is_valid
-            self._refresh_combobox()
+            self._update_ui()
 
     def set_dataset_valid(self, is_valid: bool):
         """Устанавливает статус валидности датасета."""
         if self._dataset_valid != is_valid:
             self._dataset_valid = is_valid
-            self._refresh_combobox()
+            self._update_ui()
 
     def _update_ui(self):
         """Обновляет доступность генерации."""
-        current_data = self.code_type_combo.currentData()
-
         if self._current_code_type == "model":
             can_generate = self._model_valid
         elif self._current_code_type in ["dataset", "training_config", "training"]:

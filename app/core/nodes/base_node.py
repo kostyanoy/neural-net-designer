@@ -36,6 +36,18 @@ class MyBaseNode(BaseNode):
         """Создание выходного порта"""
         self.add_output(name, multi_output=False)
 
+    def transform_shape(self, input_shape: tuple) -> tuple | None:
+        """Преобразует входную размерность в выходную. Возвращает None если не может обработать."""
+        if input_shape is None:
+            return None
+        return input_shape
+
+    def validate_shape(self, input_shape: tuple) -> tuple[bool, str]:
+        """Проверяет совместимость входной размерности. Возвращает (is_valid, error_message)"""
+        if input_shape is None:
+            return False, f"{self.NODE_NAME}: Некорректная входная размерность для узла {input_shape}"
+        return True, ""
+
     @classmethod
     def get_property_schema(cls):
         """Возвращает схему свойств текущего узла."""

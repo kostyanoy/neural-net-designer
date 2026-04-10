@@ -63,6 +63,40 @@ class GraphCompiler:
         return factory(node)
 
     @staticmethod
+    def _propagate_shapes(graph: NodeGraph) -> tuple[bool, str]:
+        """Распространяет размерности через граф"""
+        nodes = graph.all_nodes()
+        connections = GraphCompiler._get_all_connections(nodes)
+        execution_order = GraphCompiler._topological_sort(nodes, connections)
+        shapes = {}
+
+        for node_name in execution_order:
+            node = GraphCompiler._find_node_by_name(nodes, node_name)
+            input_shapes = GraphCompiler._get_input_shapes_for_node(node_name, connections, shapes)
+            if len(input_shapes) == 1:
+                input_shapes = input_shapes[0]
+
+            is_valid, error_msg = node.validate_shape(input_shapes)
+            if not is_valid:
+                return False, error_msg
+
+            output_shape = node.transform_shape(input_shapes)
+            shapes[node_name] = output_shape
+
+        print(shapes)
+        return True, ""
+
+    @staticmethod
+    def _get_input_shapes_for_node(node_name: str, connections: List[Dict], shapes: Dict) -> List[tuple]:
+        """Получает размерности всех входов узла"""
+        input_shapes = []
+        for conn in connections:
+            if conn["to_node"] == node_name:
+                from_shape = shapes.get(conn["from_node"])
+                input_shapes.append(from_shape)
+        return input_shapes
+
+    @staticmethod
     def _topological_sort(nodes: List, connections: List) -> List[str]:
         """Сортировка узлов в порядке выполнения (от Input к Output) по алгоритму Кана"""
         node_names = [node.name() for node in nodes]
@@ -114,6 +148,7 @@ class GraphCompiler:
                         'to_node': node.name(),
                         'to_port': input_port.name()
                     })
+        connections.sort(key=lambda x: (x["from_port"], x["to_port"]))
         return connections
 
     @staticmethod
@@ -153,8 +188,12 @@ class GraphCompiler:
         connections = GraphCompiler._get_all_connections(nodes)
         try:
             GraphCompiler._topological_sort(nodes, connections)
-        except AssertionError as e:
+        except ValueError as e:
             return {"is_valid": False, "error": "Обнаружен цикл в графе"}
+
+        is_valid, error_msg = GraphCompiler._propagate_shapes(graph)
+        if not is_valid:
+            return {"is_valid": False, "error": error_msg}
 
         return {"is_valid": True, "error": ""}
 

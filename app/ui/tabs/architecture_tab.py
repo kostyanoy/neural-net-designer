@@ -67,8 +67,6 @@ class ArchitectureTab(QWidget):
         self.next_btn.setEnabled(False)
         layout.addWidget(self.next_btn)
 
-        # Поле поиска
-        # TODO
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("🔍 Поиск слоя...")
         self.search_input.textChanged.connect(self._filter_blocks)

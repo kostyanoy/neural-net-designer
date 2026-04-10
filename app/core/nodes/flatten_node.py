@@ -9,3 +9,11 @@ class FlattenNode(MyBaseNode):
         """Инициализация портов узла Flatten."""
         self.add_input_port("input")
         self.add_output_port("output")
+
+    def transform_shape(self, input_shape: tuple) -> tuple:
+        if not input_shape:
+            return None
+        total_features = 1
+        for dim in input_shape:
+            total_features *= dim
+        return (total_features,)
