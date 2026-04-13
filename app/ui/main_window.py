@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QMainWindow, QStatusBar, QTabWidget, QMessageBox
 
 from config import APP_NAME
 from core.project_manager import ProjectManager
-from ui.dialog.info_dialogs import show_documentation, show_about
+from ui.dialog.info_dialogs import show_documentation, show_about, wrong_input, wrong_output
 from ui.dialog.message_boxes import save_changes_box, choose_open_file, choose_save_file
 from ui.menu_bar import CustomMenuBar
 from ui.tabs import ArchitectureTab, TrainingTab, MonitorTab, ExportTab
@@ -352,15 +352,33 @@ class MainWindow(QMainWindow):
     def _on_proceed_to_monitor(self):
         """Переход на вкладку мониторинга"""
         model = self.architecture_tab.get_model()
-        if model:
-            training_data = self.training_tab.get_training_object(model)
-            if training_data:
-                self.monitor_tab.set_training_data(training_data)
-                self.tab_widget.setCurrentIndex(2)
-            else:
-                self.status_bar.showMessage("Данные не корректны")
-        else:
+        if not model:
             self.status_bar.showMessage("Модель не корректна")
+            return
+
+        training_data = self.training_tab.get_training_object(model)
+        if not training_data:
+            self.status_bar.showMessage("Данные не корректны")
+            return
+
+        arch_input_shape, arch_output_shape = self.architecture_tab.get_input_output_shapes()
+        if arch_input_shape is None or arch_output_shape is None:
+            self.status_bar.showMessage("Не удалось определить размерности архитектуры")
+            return
+
+        dataset_info = self.training_tab.data_widget.get_dataset()
+        dataset_input_shape = dataset_info.get("input_shape")
+        dataset_num_classes = dataset_info.get("num_classes")
+
+        if dataset_input_shape != arch_input_shape:
+            wrong_input(self, arch_input_shape, dataset_input_shape)
+            return
+
+        if arch_output_shape != (dataset_num_classes,):
+            wrong_output(self, arch_output_shape, dataset_input_shape)
+            return
+        self.monitor_tab.set_training_data(training_data)
+        self.tab_widget.setCurrentIndex(2)
 
     def _on_training_started(self):
         """Блокировка вкладок во время обучения."""

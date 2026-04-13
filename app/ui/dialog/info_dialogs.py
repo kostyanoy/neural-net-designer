@@ -35,3 +35,23 @@ def show_about(parent=None):
         f"<p>© 2026</p>"
     )
     QMessageBox.about(parent, "О программе", text)
+
+
+def wrong_input(parent, arch_input_shape, dataset_input_shape):
+    QMessageBox.warning(
+        parent,
+        "Несовместимость данных",
+        f"Размерность входного слоя архитектуры {arch_input_shape} "
+        f"не совпадает с размерностью датасета {dataset_input_shape}.\n"
+        "Измените входной слой или выберите другой датасет."
+    )
+
+
+def wrong_output(parent, arch_output_shape, dataset_num_classes):
+    QMessageBox.warning(
+        parent,
+        "Несовместимость данных",
+        f"Размерность выходного слоя архитектуры {arch_output_shape} "
+        f"не совпадает с количеством классов в датасете {dataset_num_classes}.\n"
+        "Измените выходной слой или выберите другой датасет."
+    )

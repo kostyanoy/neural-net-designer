@@ -35,6 +35,7 @@ class ArchitectureTab(QWidget):
         self._is_valid = False
         self._undo_manager = UndoRedoManager()
         self._is_restoring = False  # Флаг защиты от рекурсии при десериализации
+        self._last_validation_shapes = {}
 
         self._init_ui()
         self._register_nodes()
@@ -223,7 +224,9 @@ class ArchitectureTab(QWidget):
             self._is_valid = True
             self.next_btn.setEnabled(True)
             self.validation_label.setText("✅ Граф валиден!")
-            self._apply_shapes_to_nodes(validation_result["shapes"])
+            shapes = validation_result["shapes"]
+            self._last_validation_shapes = shapes
+            self._apply_shapes_to_nodes(shapes)
         else:
             self._is_valid = False
             self.next_btn.setEnabled(False)
@@ -244,6 +247,10 @@ class ArchitectureTab(QWidget):
             for conn in connections:
                 if conn["to_node"] == node_name:
                     input_shape = shapes.get(conn["from_node"])
+
+            # Для красивого отображения
+            if node.node_type == "Output":
+                output_shape = None
 
             node.update_shape_display(input_shapes=input_shape, output_shape=output_shape)
 
@@ -359,3 +366,26 @@ class ArchitectureTab(QWidget):
             return None
         self._compiled_model = self._graph_compiler.compile(self.graph)
         return self._compiled_model
+
+    def get_input_output_shapes(self):
+        """Возвращает (input_shape, output_shape) если граф валиден, иначе (None, None)."""
+        if not self._is_valid or not self._last_validation_shapes:
+            return None, None
+
+        input_node = None
+        output_node = None
+        nodes = self.graph.all_nodes()
+        for node in nodes:
+            if node.node_type == "Input":
+                input_node = node
+            elif node.node_type == "Output":
+                output_node = node
+
+        if input_node is None or output_node is None:
+            return None, None
+
+        shapes = self._last_validation_shapes
+        input_shape = shapes.get(input_node.name())
+        output_shape = shapes.get(output_node.name())
+
+        return input_shape, output_shape
