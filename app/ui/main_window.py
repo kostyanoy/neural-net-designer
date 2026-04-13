@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QMainWindow, QStatusBar, QTabWidget, QMessageBox
 
 from config import APP_NAME
 from core.project_manager import ProjectManager
+from ui.dialog.info_dialogs import show_documentation, show_about
 from ui.dialog.message_boxes import save_changes_box, choose_open_file, choose_save_file
 from ui.menu_bar import CustomMenuBar
 from ui.tabs import ArchitectureTab, TrainingTab, MonitorTab, ExportTab
@@ -245,29 +246,19 @@ class MainWindow(QMainWindow):
 
     def _on_zoom_in(self):
         """Обработка увеличения масштаба канваса."""
-        # TODO
-        self.status_bar.showMessage("Action: Zoom In")
-        print("Zoom In requested")
+        self.architecture_tab.zoom_in()
 
     def _on_zoom_out(self):
         """Обработка уменьшения масштаба канваса."""
-        # TODO
-        self.status_bar.showMessage("Action: Zoom Out")
-        print("Zoom Out requested")
+        self.architecture_tab.zoom_out()
 
     def _on_fit_screen(self):
         """Обработка подгонки содержимого под размер окна."""
-        # TODO
-        self.status_bar.showMessage("Action: Fit to Screen")
-        print("Fit to Screen requested")
+        self.architecture_tab.fit_to_screen()
 
     def _on_toggle_grid(self, is_checked: bool):
         """Обработка переключения видимости сетки."""
-        # TODO
-        # Получаем состояние чекбокса из отправителя сигнала (если нужно)
-        state = "ON" if is_checked else "OFF"
-        self.status_bar.showMessage(f"Action: Toggle Grid ({state})")
-        print(f"Toggle Grid: {state}")
+        self.architecture_tab.toggle_grid(is_checked)
 
     def _toggle_left_dock(self):
         """Переключение видимости левой панели."""
@@ -292,15 +283,11 @@ class MainWindow(QMainWindow):
 
     def _on_docs(self):
         """Обработка открытия документации."""
-        # TODO
-        self.status_bar.showMessage("Action: Open Documentation")
-        print("Documentation requested")
+        show_documentation()
 
     def _show_about(self):
         """Обработка отображения окна 'О программе'."""
-        # TODO
-        self.status_bar.showMessage("Action: About")
-        print(f"About {APP_NAME}")
+        show_about()
 
     def _on_tab_changed(self, index: int):
         """Обработка переключения между вкладками."""

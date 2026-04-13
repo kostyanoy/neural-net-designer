@@ -1,5 +1,6 @@
 from typing import Optional
 
+import NodeGraphQt.constants
 from NodeGraphQt import NodeGraph
 from PyQt5 import QtCore
 from PyQt5.QtCore import QEvent, pyqtSignal
@@ -22,6 +23,8 @@ class ArchitectureTab(QWidget):
     validation_changed = pyqtSignal(bool)
     proceed_requested = pyqtSignal()
     undo_redo_state_changed = pyqtSignal(bool, bool)  # (can_undo, can_redo)
+
+    ZOOM_MULT = 1.2
 
     def __init__(self, parent, project_manager: ProjectManager):
         super().__init__(parent)
@@ -304,6 +307,26 @@ class ArchitectureTab(QWidget):
     def paste_nodes(self):
         """Вставляет узлы из буфера. Сдвигает координаты для удобства."""
         self.graph.paste_nodes()
+
+    def zoom_in(self):
+        """Увеличивает масштаб в графе"""
+        self.graph_view.scale(self.ZOOM_MULT, self.ZOOM_MULT)
+
+    def zoom_out(self):
+        """Уменьшает масштаб в графе"""
+        self.graph_view.scale(1 / self.ZOOM_MULT, 1 / self.ZOOM_MULT)
+
+    def fit_to_screen(self):
+        """Вписывает граф в масштаб"""
+        self.graph.fit_to_selection()
+
+    def toggle_grid(self, enabled: bool):
+        """Показать/скрыть сетку."""
+        if enabled:
+            mode = NodeGraphQt.constants.ViewerEnum.GRID_DISPLAY_LINES.value
+        else:
+            mode = NodeGraphQt.constants.ViewerEnum.GRID_DISPLAY_NONE.value
+        self.graph.set_grid_mode(mode)
 
     def _on_property_changed(self, prop_name: str, prop_value: object):
         """Обработка изменения свойства из панели"""

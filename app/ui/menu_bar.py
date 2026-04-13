@@ -71,36 +71,36 @@ class CustomMenuBar(QMenuBar):
         save_as_action.triggered.connect(self.save_project_as_triggered.emit)
         file_menu.addAction(save_as_action)
 
-        file_menu.addSeparator()
-
-        export_menu = file_menu.addMenu("&Export")
-
-        export_model = QAction("Code: &Model", self)
-        export_model.triggered.connect(lambda: self.export_triggered.emit("model"))
-        export_menu.addAction(export_model)
-
-        export_train = QAction("Code: &Training", self)
-        export_train.triggered.connect(lambda: self.export_triggered.emit("training"))
-        export_menu.addAction(export_train)
-
-        export_test = QAction("Code: &Testing", self)
-        export_test.triggered.connect(lambda: self.export_triggered.emit("testing"))
-        export_menu.addAction(export_test)
-
-        export_full = QAction("&Full Project (ZIP)", self)
-        export_full.triggered.connect(lambda: self.export_triggered.emit("full"))
-        export_menu.addAction(export_full)
-
-        export_weights = QAction("&Weights (.pth/.onnx)", self)
-        export_weights.triggered.connect(lambda: self.export_triggered.emit("weights"))
-        export_menu.addAction(export_weights)
-
-        file_menu.addSeparator()
-
-        settings_action = QAction("&Settings...", self)
-        settings_action.setShortcut("Ctrl+,")
-        settings_action.triggered.connect(self.settings_triggered.emit)
-        file_menu.addAction(settings_action)
+        # file_menu.addSeparator()
+        #
+        # export_menu = file_menu.addMenu("&Export")
+        #
+        # export_model = QAction("Code: &Model", self)
+        # export_model.triggered.connect(lambda: self.export_triggered.emit("model"))
+        # export_menu.addAction(export_model)
+        #
+        # export_train = QAction("Code: &Training", self)
+        # export_train.triggered.connect(lambda: self.export_triggered.emit("training"))
+        # export_menu.addAction(export_train)
+        #
+        # export_test = QAction("Code: &Testing", self)
+        # export_test.triggered.connect(lambda: self.export_triggered.emit("testing"))
+        # export_menu.addAction(export_test)
+        #
+        # export_full = QAction("&Full Project (ZIP)", self)
+        # export_full.triggered.connect(lambda: self.export_triggered.emit("full"))
+        # export_menu.addAction(export_full)
+        #
+        # export_weights = QAction("&Weights (.pth/.onnx)", self)
+        # export_weights.triggered.connect(lambda: self.export_triggered.emit("weights"))
+        # export_menu.addAction(export_weights)
+        #
+        # file_menu.addSeparator()
+        #
+        # settings_action = QAction("&Settings...", self)
+        # settings_action.setShortcut("Ctrl+,")
+        # settings_action.triggered.connect(self.settings_triggered.emit)
+        # file_menu.addAction(settings_action)
 
         file_menu.addSeparator()
 
@@ -191,12 +191,12 @@ class CustomMenuBar(QMenuBar):
         self.right_dock_action.triggered.connect(self.toggle_right_dock_triggered.emit)
         view_menu.addAction(self.right_dock_action)
 
-        view_menu.addSeparator()
-
-        theme_action = QAction("Toggle &Theme (Dark/Light)", self)
-        theme_action.setShortcut("F2")
-        theme_action.triggered.connect(self.toggle_theme_triggered.emit)
-        view_menu.addAction(theme_action)
+        # view_menu.addSeparator()
+        #
+        # theme_action = QAction("Toggle &Theme (Dark/Light)", self)
+        # theme_action.setShortcut("F2")
+        # theme_action.triggered.connect(self.toggle_theme_triggered.emit)
+        # view_menu.addAction(theme_action)
 
     def _create_help_menu(self):
         """Создает меню 'Help' с документацией и информацией о программе."""
