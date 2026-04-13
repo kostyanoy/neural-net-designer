@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QLineEdit, QListW
 from torch import nn
 
 from core.compiler import GraphCompiler
-from core.nodes import ActivationNode, FlattenNode, InputNode, OutputNode, MergeNode, SplitNode
+from core.nodes import ActivationNode, FlattenNode, InputNode, OutputNode, MergeNode, SplitNode, Conv2DNode, PoolingNode
 from core.nodes.base_node import MyBaseNode
 from core.nodes.dense_node import DenseNode
 from core.project_manager import ProjectManager
@@ -94,13 +94,15 @@ class ArchitectureTab(QWidget):
 
         # TODO from config
         blocks = [
-            {"name": "Input", "id": "neural_net.InputNode", "icon": "🟢"},
-            {"name": "Dense", "id": "neural_net.DenseNode", "icon": "🔷"},
             {"name": "Activation", "id": "neural_net.ActivationNode", "icon": "🟣"},
+            {"name": "Conv2D", "id": "neural_net.Conv2DNode", "icon": "🔲"},
+            {"name": "Dense", "id": "neural_net.DenseNode", "icon": "🔷"},
             {"name": "Flatten", "id": "neural_net.FlattenNode", "icon": "🟠"},
-            {"name": "Split", "id": "neural_net.SplitNode", "icon": "🔀"},
+            {"name": "Input", "id": "neural_net.InputNode", "icon": "🟢"},
             {"name": "Merge", "id": "neural_net.MergeNode", "icon": "🔗"},
             {"name": "Output", "id": "neural_net.OutputNode", "icon": "🔴"},
+            {"name": "Pooling", "id": "neural_net.PoolingNode", "icon": "💧"},
+            {"name": "Split", "id": "neural_net.SplitNode", "icon": "🔀"},
         ]
 
         for block in blocks:
@@ -144,11 +146,13 @@ class ArchitectureTab(QWidget):
     def _register_nodes(self):
         """Регистрация узлов в NodeGraph."""
         self.graph.register_node(ActivationNode)
+        self.graph.register_node(Conv2DNode)
         self.graph.register_node(DenseNode)
         self.graph.register_node(FlattenNode)
         self.graph.register_node(InputNode)
         self.graph.register_node(MergeNode)
         self.graph.register_node(OutputNode)
+        self.graph.register_node(PoolingNode)
         self.graph.register_node(SplitNode)
 
     def _filter_blocks(self, text):

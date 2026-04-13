@@ -6,7 +6,7 @@ from torch import nn
 from core.compiler.merge_layer import MergeLayer
 from core.compiler.model_builder import DynamicGraphModel
 from core.compiler.split_layer import SplitLayer
-from core.nodes import ActivationNode
+from core.nodes import ActivationNode, PoolingNode
 from core.nodes.base_node import MyBaseNode
 
 
@@ -15,6 +15,13 @@ class GraphCompiler:
 
     LAYER_FACTORIES = {
         "Activation": lambda node: GraphCompiler._create_activation(node),
+        "Conv2D": lambda node: nn.LazyConv2d(
+            out_channels=node.get_property("out_channels"),
+            kernel_size=node.get_property("kernel_size"),
+            stride=node.get_property("stride"),
+            padding=node.get_property("padding"),
+            bias=node.get_property("bias"),
+        ),
         "Dense": lambda node: nn.LazyLinear(
             out_features=node.get_property("units"),
             bias=node.get_property("use_bias"),
@@ -23,6 +30,7 @@ class GraphCompiler:
         "Input": lambda node: None,
         "Merge": lambda node: MergeLayer(node.get_property("mode")),
         "Output": lambda node: None,
+        "Pooling": lambda node: GraphCompiler._create_pooling(node),
         "Split": lambda node: SplitLayer(),
     }
 
@@ -251,3 +259,22 @@ class GraphCompiler:
             "softmax": nn.Softmax(dim=1),
         }
         return activations[func_name]
+
+    @classmethod
+    def _create_pooling(cls, node: PoolingNode):
+        """Фабрика слоёв пулинга"""
+        pool_type = node.get_property("pool_type")
+        if pool_type == "avg":
+            return nn.AvgPool2d(
+                kernel_size=node.get_property("kernel_size"),
+                stride=node.get_property("stride"),
+                padding=node.get_property("padding"),
+            )
+        elif pool_type == "max":
+            return nn.MaxPool2d(
+                kernel_size=node.get_property("kernel_size"),
+                stride=node.get_property("stride"),
+                padding=node.get_property("padding"),
+            )
+        else:
+            raise ValueError(f"Неизвестный вид пулинга: {pool_type}")

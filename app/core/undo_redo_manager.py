@@ -19,15 +19,14 @@ class UndoRedoManager:
         for node in state["nodes"].values():
             node["selected"] = False
 
-        if self._undo_stack and json.dumps(state, ensure_ascii=False) == json.dumps(self._undo_stack[-1], ensure_ascii=False):
+        if self._undo_stack and json.dumps(state, ensure_ascii=False) == json.dumps(self._undo_stack[-1],
+                                                                                    ensure_ascii=False):
             return
 
         self._redo_stack.clear()
         self._undo_stack.append(state)
         if len(self._undo_stack) > self._max_steps:
             self._undo_stack.pop(0)
-
-        print(len(self._undo_stack), json.dumps(self._undo_stack[-1], indent=4, ensure_ascii=False))
 
     def undo(self) -> dict | None:
         """Возвращает предыдущее состояние."""
