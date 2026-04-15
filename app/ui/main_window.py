@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QMainWindow, QStatusBar, QTabWidget, QMessageBox
 
 from config import APP_NAME
 from core.project_manager import ProjectManager
+from export.model_generator import ModelCodeGenerator
 from ui.dialog.info_dialogs import show_documentation, show_about, wrong_input, wrong_output
 from ui.dialog.message_boxes import save_changes_box, choose_open_file, choose_save_file
 from ui.menu_bar import CustomMenuBar
@@ -409,9 +410,17 @@ class MainWindow(QMainWindow):
 
     def _on_generate_code(self, code_type: str):
         """Генерация кода по типу."""
-        # TODO: Вызов генератора кода по шаблонам Jinja2
-        print(f"Generating code for: {code_type}")
-        # self.export_tab.set_generated_code(code_type, generated_code)
+        try:
+            if code_type == "model":
+                graph = self.architecture_tab.graph
+                generator = ModelCodeGenerator(graph)
+                generated_code = generator.generate()
+                self.export_tab.set_generated_code("model", generated_code)
+            elif code_type in ["dataset", "training"]:
+                self.status_bar.showMessage(f"⏳ Генерация '{code_type}' будет реализована на следующем этапе")
+        except Exception as e:
+            self.status_bar.showMessage(f"Ошибка генерации: {str(e)}")
+            print(e)
 
     def _on_export_weights(self, path: str):
         """Экспорт весов модели."""

@@ -42,12 +42,12 @@ class GraphCompiler:
     def compile(self, graph: NodeGraph):
         """Компиляция графа в nn.Module для обучения."""
         nodes: List[MyBaseNode] = graph.all_nodes()
-        self._connections = self._get_all_connections(nodes)
-        self._execution_order = self._topological_sort(nodes, self._connections)
+        self._connections = self.get_all_connections(nodes)
+        self._execution_order = self.topological_sort(nodes, self._connections)
 
         self._layers = {}
         for node_name in self._execution_order:
-            node = self._find_node_by_name(nodes, node_name)
+            node = self.find_node_by_name(nodes, node_name)
             if node:
                 layer = self._create_layer(node)
                 if layer is not None:
@@ -74,12 +74,12 @@ class GraphCompiler:
     def _propagate_shapes(graph: NodeGraph) -> tuple[bool, str, dict]:
         """Распространяет размерности через граф"""
         nodes = graph.all_nodes()
-        connections = GraphCompiler._get_all_connections(nodes)
-        execution_order = GraphCompiler._topological_sort(nodes, connections)
+        connections = GraphCompiler.get_all_connections(nodes)
+        execution_order = GraphCompiler.topological_sort(nodes, connections)
 
         shapes = {}
         for node_name in execution_order:
-            node = GraphCompiler._find_node_by_name(nodes, node_name)
+            node = GraphCompiler.find_node_by_name(nodes, node_name)
             input_shapes = GraphCompiler._get_input_shapes_for_node(node_name, connections, shapes)
             if len(input_shapes) == 1:
                 input_shapes = input_shapes[0]
@@ -104,7 +104,7 @@ class GraphCompiler:
         return input_shapes
 
     @staticmethod
-    def _topological_sort(nodes: List, connections: List) -> List[str]:
+    def topological_sort(nodes: List, connections: List) -> List[str]:
         """Сортировка узлов в порядке выполнения (от Input к Output) по алгоритму Кана"""
         node_names = [node.name() for node in nodes]
         in_degree = {node_name: 0 for node_name in node_names}
@@ -135,7 +135,7 @@ class GraphCompiler:
         return result
 
     @staticmethod
-    def _find_node_by_name(nodes: List[MyBaseNode], node_name: str):
+    def find_node_by_name(nodes: List[MyBaseNode], node_name: str):
         """Находит узел по имени"""
         for node in nodes:
             if node.name() == node_name:
@@ -143,7 +143,7 @@ class GraphCompiler:
         return None
 
     @staticmethod
-    def _get_all_connections(nodes: List[MyBaseNode]):
+    def get_all_connections(nodes: List[MyBaseNode]):
         """Собирает все соединения в графе"""
         connections = []
         for node in nodes:
@@ -192,9 +192,9 @@ class GraphCompiler:
             return {"is_valid": False,
                     "error": f"Не подключены выходные порты: {', '.join(port_result['unused_outputs'])}"}
 
-        connections = GraphCompiler._get_all_connections(nodes)
+        connections = GraphCompiler.get_all_connections(nodes)
         try:
-            GraphCompiler._topological_sort(nodes, connections)
+            GraphCompiler.topological_sort(nodes, connections)
         except ValueError as e:
             return {"is_valid": False, "error": "Обнаружен цикл в графе"}
 

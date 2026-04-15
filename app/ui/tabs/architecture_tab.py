@@ -237,7 +237,7 @@ class ArchitectureTab(QWidget):
 
     def _apply_shapes_to_nodes(self, shapes: dict):
         """Обновляет отображение размерностей на всех узлах графа."""
-        connections = self._graph_compiler._get_all_connections(self.graph.all_nodes())
+        connections = self._graph_compiler.get_all_connections(self.graph.all_nodes())
 
         for node in self.graph.all_nodes():
             node_name = node.name()

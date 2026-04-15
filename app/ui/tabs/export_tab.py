@@ -171,7 +171,6 @@ class ExportTab(QWidget):
 
         self.status_label.setText("Генерация кода...")
         self.generate_code_requested.emit(self._current_code_type)
-        # TODO генерирвоать код по шаблонам
 
     def _on_code_changed(self):
         """Обработка изменения кода в редакторе."""

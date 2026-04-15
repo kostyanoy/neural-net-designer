@@ -1,0 +1,36 @@
+import torch
+import torch.nn as nn
+{%- if has_custom_layers %}
+from typing import List
+
+class SplitLayer(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.num_outputs = 2
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
+        return tuple(x for _ in range(self.num_outputs))
+
+class MergeLayer(nn.Module):
+    def __init__(self, mode: str = "sum"):
+        super().__init__()
+        self.mode = mode
+    def forward(self, inputs: List[torch.Tensor]) -> torch.Tensor:
+        if self.mode == "sum":
+            return sum(inputs)
+        elif self.mode == "mean":
+            return sum(inputs) / len(inputs)
+        else:
+            raise NotImplementedError(f"{self.mode} is not implemented")
+{% endif %}
+
+class GeneratedModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        {%- for name, layer_def in layers %}
+        self.{{ name }} = {{ layer_def }}
+        {%- endfor %}
+
+    def forward(self, x):
+        {%- for stmt in forward_statements %}
+        {{ stmt }}
+        {%- endfor %}
