@@ -12,7 +12,7 @@ class ExportTab(QWidget):
     export_code_requested = pyqtSignal(str, str) # type, path
     export_weights_requested = pyqtSignal(str) # path
 
-    _CODE_TYPES = ["model", "dataset", "training_config", "training"]
+    _CODE_TYPES = ["model", "dataset", "training"]
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -20,7 +20,6 @@ class ExportTab(QWidget):
         self._generated_code = {
             "model": "",
             "dataset": "",
-            "training_config": "",
             "training": "",
         }
 
@@ -57,10 +56,9 @@ class ExportTab(QWidget):
 
         self.code_type_combo = QComboBox()
         self.code_type_combo.addItems([
-            "Код модели (класс)",
+            "Код модели",
             "Код загрузки датасета",
-            "Код настройки обучения",
-            "Код обучения (train loop)"
+            "Код обучения"
         ])
         self.code_type_combo.setCurrentIndex(0)
         self.code_type_combo.currentIndexChanged.connect(self._on_code_type_changed)
@@ -136,16 +134,19 @@ class ExportTab(QWidget):
         """Обновляет доступность генерации."""
         if self._current_code_type == "model":
             can_generate = self._model_valid
-        elif self._current_code_type in ["dataset", "training_config", "training"]:
-            can_generate = self._dataset_valid
+        elif self._current_code_type in ["dataset", "training"]:
+            can_generate = self._dataset_valid and self._model_valid
         else:
             can_generate = False
 
         self.generate_btn.setEnabled(can_generate)
-        self.export_code_btn.setEnabled(self._model_valid)
+        code = self.code_editor.get_code().strip()
+        self.export_code_btn.setEnabled(len(code) > 0)
 
         if not can_generate and self._current_code_type:
             self.status_label.setText("Для генерации этого типа кода необходимы валидные параметры")
+        else:
+            self.status_label.setText("Готов к генерации")
 
     def _connect_signals(self):
         """Подключение внутренних сигналов."""
@@ -188,13 +189,11 @@ class ExportTab(QWidget):
         file_types = {
             "model": "Python Files (*.py)",
             "dataset": "Python Files (*.py)",
-            "training_config": "Python Files (*.py)",
             "training": "Python Files (*.py)"
         }
         default_name = {
             "model": "model.py",
             "dataset": "dataset.py",
-            "training_config": "training_config.py",
             "training": "train.py"
         }
 

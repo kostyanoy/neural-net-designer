@@ -42,7 +42,3 @@ class CodeEditor(QPlainTextEdit):
     def get_code(self) -> str:
         """Получить код из редактора."""
         return self.toPlainText()
-
-    def clear(self):
-        """Очистить редактор."""
-        self.clear()
