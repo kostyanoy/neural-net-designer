@@ -1,0 +1,22 @@
+import torch
+from pathlib import Path
+from torchvision import datasets, transforms
+
+def load_dataset():
+    data_dir = Path(__file__).parent / "datasets" / "mnist"
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
+
+    train_ds = datasets.MNIST(root=str(data_dir), train=True, download=True, transform=transform)
+    test_ds = datasets.MNIST(root=str(data_dir), train=False, download=True, transform=transform)
+    return train_ds, test_ds
+
+
+if __name__ == "__main__":
+    train, test = load_dataset()
+    print(f"Dataset: MNIST")
+    print(f"Train samples: {len(train)}, Test samples: {len(test)}")
