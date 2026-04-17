@@ -60,6 +60,7 @@ def choose_dir_dataset(parent=None):
         "Выберите папку с изображениями"
     )
 
+
 def choose_code_file(parent, name, types):
     """Диалог выбора файла для экспорта кода."""
     return QFileDialog.getSaveFileName(
@@ -69,11 +70,28 @@ def choose_code_file(parent, name, types):
         types
     )
 
-def choose_weights_file(parent=None):
+
+def choose_weights_file(parent, fmt: str, name: str, file_type: str):
     """Диалог выбора файла для экспорта весов модели."""
+    save_dir = Path(PROJECTS_DIR)
+    save_dir.mkdir(parents=True, exist_ok=True)
+    save_path = str(save_dir / name)
+
     return QFileDialog.getSaveFileName(
-            parent,
-            "Сохранить веса модели",
-            "model_weights.pth",
-            "PyTorch Weights (*.pth);;ONNX Model (*.onnx);;All Files (*)"
-        )
+        parent,
+        f"Сохранить веса ({fmt.upper()})",
+        save_path,
+        file_type
+    )
+
+
+def choose_load_weight_file(parent=None):
+    save_dir = Path(PROJECTS_DIR)
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    return QFileDialog.getOpenFileName(
+        parent,
+        "Загрузить веса (.pth)",
+        str(save_dir),
+        "PyTorch Weights (*.pth)"
+    )

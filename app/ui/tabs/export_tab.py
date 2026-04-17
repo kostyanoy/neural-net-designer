@@ -10,7 +10,7 @@ class ExportTab(QWidget):
 
     generate_code_requested = pyqtSignal(str) # type
     export_code_requested = pyqtSignal(str, str) # type, path
-    export_weights_requested = pyqtSignal(str) # path
+    export_weights_requested = pyqtSignal(str, str) # path
 
     _CODE_TYPES = ["model", "dataset", "training"]
 
@@ -109,10 +109,16 @@ class ExportTab(QWidget):
         self.export_code_btn.setEnabled(False)
         layout.addWidget(self.export_code_btn)
 
-        self.export_weights_btn = QPushButton("⚖️ Экспортировать веса модели (.pth)")
-        self.export_weights_btn.clicked.connect(self._on_export_weights_clicked)
-        self.export_weights_btn.setEnabled(False)
-        layout.addWidget(self.export_weights_btn)
+        self._export_pth_btn = QPushButton("⚖️ Экспорт .pth")
+        self._export_pth_btn.clicked.connect(lambda: self._on_export_weights_clicked("pth"))
+        self._export_pth_btn.setEnabled(False)
+        layout.addWidget(self._export_pth_btn)
+
+        self._export_onnx_btn = QPushButton("🌐 Экспорт .onnx")
+        self._export_onnx_btn.clicked.connect(lambda: self._on_export_weights_clicked("onnx"))
+        self._export_onnx_btn.setEnabled(False)
+        self._export_onnx_btn.setVisible(False)
+        layout.addWidget(self._export_onnx_btn)
 
         layout.addStretch()
 
@@ -204,12 +210,17 @@ class ExportTab(QWidget):
                 f.write(code)
             self.status_label.setText(f"✅ Код сохранён: {path}")
 
-    def _on_export_weights_clicked(self):
+    def _on_export_weights_clicked(self, fmt: str):
         """Обработка кнопки экспорта весов."""
-        path, _ = choose_weights_file(self)
+        ext = ".pth" if fmt == "pth" else ".onnx"
+        name = f"model_weights{ext}"
+        file_type = "PyTorch Weights (*.pth)" if fmt == "pth" else "ONNX Model (*.onnx)"
+
+        path, _ = choose_weights_file(self, fmt, name, file_type)
         if path:
-            self.export_weights_requested.emit(path)
-            # TODO: сохранение весов
+            if not path.endswith(ext):
+                path += ext
+            self.export_weights_requested.emit(path, fmt)
 
     def set_generated_code(self, code_type: str, code: str):
         """Установить сгенерированный код."""
@@ -220,8 +231,9 @@ class ExportTab(QWidget):
                 self.code_editor.set_code(code)
 
     def enable_weights_export(self, enabled: bool):
-        """Активировать/деактивировать кнопку экспорта весов."""
-        self.export_weights_btn.setEnabled(enabled)
+        """Активировать/деактивировать кнопки экспорта весов."""
+        self._export_pth_btn.setEnabled(enabled)
+        self._export_onnx_btn.setEnabled(enabled)
 
     def get_current_code(self) -> str:
         """Получить текущий код из редактора."""

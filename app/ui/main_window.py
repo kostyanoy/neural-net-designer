@@ -1,15 +1,18 @@
+import traceback
 from pathlib import Path
 
+import torch
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMainWindow, QStatusBar, QTabWidget, QMessageBox
 
 from config import APP_NAME
+from core.compiler import GraphCompiler
 from core.project_manager import ProjectManager
 from export.dataset_generator import DatasetCodeGenerator
 from export.model_generator import ModelCodeGenerator
 from export.training_generator import TrainingCodeGenerator
 from ui.dialog.info_dialogs import show_documentation, show_about, wrong_input, wrong_output
-from ui.dialog.message_boxes import save_changes_box, choose_open_file, choose_save_file
+from ui.dialog.message_boxes import save_changes_box, choose_open_file, choose_save_file, choose_load_weight_file
 from ui.menu_bar import CustomMenuBar
 from ui.tabs import ArchitectureTab, TrainingTab, MonitorTab, ExportTab
 
@@ -127,6 +130,7 @@ class MainWindow(QMainWindow):
         self.monitor_tab.training_started.connect(self._on_training_started)
         self.monitor_tab.training_finished.connect(self._on_training_finished)
         self.monitor_tab.training_stopped.connect(self._on_training_stopped)
+        self.monitor_tab.load_model_request.connect(self._on_load_model)
 
         # --- Export Tab ---
         self.export_tab.generate_code_requested.connect(self._on_generate_code)
@@ -160,6 +164,8 @@ class MainWindow(QMainWindow):
         self.architecture_tab.graph.clear_session()
         self.architecture_tab.reset_undo_redo()
         self.training_tab.clear_session()
+        self.monitor_tab.reset()
+        self.export_tab.enable_weights_export(False)
         self.status_bar.showMessage("Создан новый проект")
 
     def _on_open_project(self):
@@ -176,7 +182,8 @@ class MainWindow(QMainWindow):
             project_data = self.project_manager.load_project(path)
             self.architecture_tab.deserialize_graph(project_data["architecture"])
             self.training_tab.set_config(project_data["training"])
-
+            self.monitor_tab.reset()
+            self.export_tab.enable_weights_export(False)
             self.status_bar.showMessage(f"Загружен проект из файла: {path}")
 
     def _on_save_project(self):
@@ -381,6 +388,7 @@ class MainWindow(QMainWindow):
             wrong_output(self, arch_output_shape, dataset_input_shape)
             return
         self.monitor_tab.set_training_data(training_data)
+        training_data["input_shape"] = arch_input_shape
         self.tab_widget.setCurrentIndex(2)
 
     def _on_training_started(self):
@@ -393,13 +401,26 @@ class MainWindow(QMainWindow):
         """Разблокировка вкладок после завершения."""
         self._training_locked = False
         self._update_tab_locking()
+        self.export_tab.enable_weights_export(True)
         self.status_bar.showMessage("Обучение завершено - вкладки разблокированы")
 
     def _on_training_stopped(self):
         """Разблокировка вкладок после остановки."""
         self._training_locked = False
         self._update_tab_locking()
+        self.export_tab.enable_weights_export(True)
         self.status_bar.showMessage("Обучение остановлено - вкладки разблокированы")
+
+    def _on_load_model(self):
+        "Передача параметров для загрузки параметров"
+        path, _ = choose_load_weight_file(self)
+        if not path:
+            return
+
+        model = self.architecture_tab.get_model()
+        input_node = GraphCompiler.find_node_by_name(self.architecture_tab.graph.all_nodes(), "Input")
+        self.monitor_tab.load_model(model, path, input_node)
+        self.export_tab.enable_weights_export(True)
 
     def _update_tab_locking(self):
         """Обновить состояние блокировки вкладок."""
@@ -432,10 +453,53 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage(f"Ошибка генерации: {str(e)}")
             print(e)
 
-    def _on_export_weights(self, path: str):
+    def _on_export_weights(self, path: str, fmt: str):
         """Экспорт весов модели."""
-        # TODO: Сохранение state_dict модели
-        print(f"Exporting weights to: {path}")
+        if self.monitor_tab.trained_model is None:
+            self.status_bar.showMessage("Сначала обучите модель или загрузите веса")
+            return
+
+        model = self.monitor_tab.trained_model
+        model.eval()
+        model.cpu()
+
+        try:
+            if fmt == "pth":
+                torch.save(model.state_dict(), path)
+                self.status_bar.showMessage(f"Веса сохранены: {path}")
+                self.monitor_tab.append_log(f"Экспорт .pth: {path}")
+            elif fmt == "onnx":
+                if self.monitor_tab.trained_input_shape is None:
+                    self.status_bar.showMessage("Размерность входа не определена")
+                    return
+
+                in_shape = self.monitor_tab.trained_input_shape
+                dummy_shape = (1,) + in_shape if len(in_shape) < 4 else (1,) + in_shape
+                dummy_input = torch.randn(dummy_shape, device="cpu")
+
+                # Принудительный forward для материализации Lazy-слоёв
+                with torch.no_grad():
+                    _ = model(dummy_input)
+
+                torch.onnx.export(
+                    model,
+                    dummy_input,
+                    path,
+                    opset_version=15,
+                    input_names=["input"],
+                    output_names=["output"],
+                    dynamic_axes={"input": {0: "batch_size"}, "output": {0: "batch_size"}},
+                )
+                self.status_bar.showMessage(f"ONNX модель сохранена: {path}")
+                self.monitor_tab.append_log(f"Экспорт .onnx: {path}")
+
+            else:
+                self.status_bar.showMessage(f"Неизвестный формат: {fmt}")
+
+        except Exception as e:
+            self.status_bar.showMessage(f"Ошибка экспорта: {str(e)}")
+            self.monitor_tab.append_log(f"Ошибка экспорта: {str(e)}")
+            traceback.print_exc()
 
     def _on_project_loaded(self, project_data: dict):
         """Обработка загрузки проекта."""
