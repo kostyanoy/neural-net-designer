@@ -6,7 +6,6 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMainWindow, QStatusBar, QTabWidget, QMessageBox
 
 from config import APP_NAME
-from core.compiler import GraphCompiler
 from core.project_manager import ProjectManager
 from export.dataset_generator import DatasetCodeGenerator
 from export.model_generator import ModelCodeGenerator
@@ -418,9 +417,27 @@ class MainWindow(QMainWindow):
             return
 
         model = self.architecture_tab.get_model()
-        input_node = GraphCompiler.find_node_by_name(self.architecture_tab.graph.all_nodes(), "Input")
-        self.monitor_tab.load_model(model, path, input_node)
-        self.export_tab.enable_weights_export(True)
+        if model is None:
+            self.status_bar.showMessage("Модель не валидна, загрузка весов невозможна")
+            return
+
+        try:
+            state_dict = torch.load(path, map_location="cpu")
+            model.load_state_dict(state_dict)
+            model.eval()
+
+            training_object = self.training_tab.get_training_object(model)
+            if training_object is None:
+                self.status_bar.showMessage("Не удалось создать объект обучения (проверьте датасет)")
+                return
+
+            self.monitor_tab.set_training_data(training_object)
+            self.monitor_tab.append_log(f"Веса загружены: {path}")
+            self.export_tab.enable_weights_export(True)
+            self.status_bar.showMessage(f"Веса загружены, обучение готово: {path}")
+        except Exception as e:
+            self.status_bar.showMessage(f"Ошибка загрузки весов: {str(e)}")
+            self.monitor_tab.append_log(f"Ошибка загрузки: {str(e)}")
 
     def _update_tab_locking(self):
         """Обновить состояние блокировки вкладок."""

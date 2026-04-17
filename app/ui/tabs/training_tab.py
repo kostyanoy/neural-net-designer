@@ -95,5 +95,6 @@ class TrainingTab(QWidget):
             "loss_fn": loss_fn,
             "params": training_params,
             "device": device,
+            "input_shape": dataset_info["input_shape"],
         }
 

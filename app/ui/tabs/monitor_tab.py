@@ -1,7 +1,5 @@
 import time
-from pathlib import Path
 
-import torch
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal, QThread, QTimer
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget, QSplitter, QGroupBox, QHBoxLayout, QPushButton, QFormLayout, \
@@ -89,7 +87,7 @@ class MonitorTab(QWidget):
         self.stop_btn.setEnabled(False)
 
         self.load_weights_btn = QPushButton("📂 Загрузить веса (.pth)")
-        self.load_weights_btn.clicked.connect(self._on_load_weights)
+        self.load_weights_btn.clicked.connect(lambda: self.load_model_request.emit())
 
         layout.addWidget(self.start_btn)
         layout.addWidget(self.pause_btn)
@@ -331,10 +329,6 @@ class MonitorTab(QWidget):
         self._training_thread = None
         self._training_worker = None
 
-    def _on_load_weights(self):
-        """Сигнла для загрузки предобученных весов в текущую архитектуру."""
-        self.load_model_request.emit()
-
     def _on_start_clicked(self):
         """Обработка кнопки Старт."""
         if self._is_training and not self._is_paused:
@@ -523,54 +517,13 @@ class MonitorTab(QWidget):
 
         self.metrics_model.set_headers(columns)
 
-    def load_model(self, model, path, input_node):
-        """Загрузка предобученных весов в текущую архитектуру."""
-        try:
-            if model is None:
-                self.append_log("Текущий граф невалиден. Валидируйте архитектуру перед загрузкой весов.")
-                return
-
-            self.reset_ui_state()
-
-            state_dict = torch.load(path, map_location="cpu")
-            model.load_state_dict(state_dict)
-            model.eval()
-            model.cpu()
-
-            self.trained_model = model
-            if input_node:
-                raw = input_node.get_property("input_shape")
-                self.trained_input_shape = tuple(int(x.strip()) for x in raw.split(",") if x.strip())
-
-            if self._training_data is not None:
-                self._training_data["model"] = model
-                if self.trained_input_shape:
-                    self._training_data["input_shape"] = self.trained_input_shape
-            if self._training_data is not None:
-                self.start_btn.setEnabled(True)
-
-            self.append_log(f"Веса успешно загружены: {Path(path).name}")
-        except Exception as e:
-            self.append_log(f"Ошибка загрузки весов: {str(e)}")
-
-    def refresh_training_data(self, training_tab):
-        """Обновить training_data после загрузки весов"""
-        if not self._training_data:
-            return
-        model = self._training_data.get("model")
-        if model is None:
-            return
-        # Получаем свежие параметры обучения (эпохи, батч, lr и т.д.)
-        fresh_data = training_tab.get_training_object(model)
-        if fresh_data:
-            self._training_data.update(fresh_data)
-            self.append_log("Оптимизатор и параметры обучения обновлены")
-
     def set_training_data(self, training_data: dict):
         """Установить данные для обучения."""
         self.reset()
         self._training_data = training_data
         self.start_btn.setEnabled(True)
+        self.trained_model = training_data.get("model")
+        self.trained_input_shape = training_data.get("input_shape")
         self.append_log("Данные для обучения загружены")
 
     def is_training_active(self):
