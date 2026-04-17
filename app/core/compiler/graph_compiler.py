@@ -26,6 +26,7 @@ class GraphCompiler:
             out_features=node.get_property("units"),
             bias=node.get_property("use_bias"),
         ),
+        "Dropout": lambda node: nn.Dropout(p=node.get_property("p")),
         "Flatten": lambda node: nn.Flatten(),
         "Input": lambda node: None,
         "Merge": lambda node: MergeLayer(node.get_property("mode")),

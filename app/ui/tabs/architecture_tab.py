@@ -9,7 +9,8 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QLineEdit, QListW
 from torch import nn
 
 from core.compiler import GraphCompiler
-from core.nodes import ActivationNode, FlattenNode, InputNode, OutputNode, MergeNode, SplitNode, Conv2DNode, PoolingNode
+from core.nodes import ActivationNode, FlattenNode, InputNode, OutputNode, MergeNode, SplitNode, Conv2DNode, \
+    PoolingNode, DropoutNode
 from core.nodes.base_node import MyBaseNode
 from core.nodes.dense_node import DenseNode
 from core.project_manager import ProjectManager
@@ -101,6 +102,7 @@ class ArchitectureTab(QWidget):
             {"name": "Activation", "id": "neural_net.ActivationNode", "icon": "🟣"},
             {"name": "Conv2D", "id": "neural_net.Conv2DNode", "icon": "🔲"},
             {"name": "Dense", "id": "neural_net.DenseNode", "icon": "🔷"},
+            {"name": "Dropout", "id": "neural_net.DropoutNode", "icon": "🟡"},
             {"name": "Flatten", "id": "neural_net.FlattenNode", "icon": "🟠"},
             {"name": "Input", "id": "neural_net.InputNode", "icon": "🟢"},
             {"name": "Merge", "id": "neural_net.MergeNode", "icon": "🔗"},
@@ -152,6 +154,7 @@ class ArchitectureTab(QWidget):
         self.graph.register_node(ActivationNode)
         self.graph.register_node(Conv2DNode)
         self.graph.register_node(DenseNode)
+        self.graph.register_node(DropoutNode)
         self.graph.register_node(FlattenNode)
         self.graph.register_node(InputNode)
         self.graph.register_node(MergeNode)

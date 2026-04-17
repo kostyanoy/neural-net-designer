@@ -40,6 +40,8 @@ class ModelCodeGenerator:
                     f"bias={node.get_property('bias')})")
         elif t == "Dense":
             return f"nn.LazyLinear(out_features={node.get_property('units')}, bias={node.get_property('use_bias')})"
+        elif t == "Dropout":
+            return f"nn.Dropout(p={node.get_property('p')})"
         elif t == "Flatten":
             return "nn.Flatten()"
         elif t == "Pooling":
