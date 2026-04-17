@@ -63,10 +63,14 @@ def choose_dir_dataset(parent=None):
 
 def choose_code_file(parent, name, types):
     """Диалог выбора файла для экспорта кода."""
+    save_dir = Path(PROJECTS_DIR)
+    save_dir.mkdir(parents=True, exist_ok=True)
+    save_path = str(save_dir / name)
+
     return QFileDialog.getSaveFileName(
         parent,
         "Сохранить код",
-        name,
+        save_path,
         types
     )
 
