@@ -1,0 +1,114 @@
+import torch
+import os
+from torch.optim import {{ optimizer_name }}
+from torch.nn import {{ loss_function_name }}
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from model import {{ model_class_name }}
+from dataset import get_dataloaders
+
+# Гиперпараметры
+EPOCHS = {{ epochs }}
+BATCH_SIZE = {{ batch_size }}
+LEARNING_RATE = {{ learning_rate }}
+WEIGHT_DECAY = {{ weight_decay }}
+SELECTED_METRICS = {{ selected_metrics }}
+SAVE_PATH = "best_model.pth"
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"[INFO] Используемое устройство: {device}")
+
+def train_one_epoch(model, dataloader, optimizer, loss_fn):
+    """Одна эпоха обучения."""
+    model.train()
+    total_loss = 0.0
+    all_preds, all_targets = [], []
+
+    for data, target in dataloader:
+        data, target = data.to(device), target.to(device)
+        optimizer.zero_grad()
+        output = model(data)
+        loss = loss_fn(output, target)
+        loss.backward()
+        optimizer.step()
+
+        total_loss += loss.item()
+        all_preds.extend(output.argmax(dim=1).cpu().numpy())
+        all_targets.extend(target.cpu().numpy())
+
+    avg_loss = total_loss / max(len(dataloader), 1)
+    return avg_loss, all_preds, all_targets
+
+def validate_epoch(model, dataloader, loss_fn):
+    """Одна эпоха валидации."""
+    model.eval()
+    total_loss = 0.0
+    all_preds, all_targets = [], []
+
+    with torch.no_grad():
+        for data, target in dataloader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            loss = loss_fn(output, target)
+            total_loss += loss.item()
+            all_preds.extend(output.argmax(dim=1).cpu().numpy())
+            all_targets.extend(target.cpu().numpy())
+
+    avg_loss = total_loss / max(len(dataloader), 1)
+    return avg_loss, all_preds, all_targets
+
+def compute_metrics(preds, targets):
+    """Расчёт метрик на основе списка SELECTED_METRICS."""
+    metrics = {}
+    if not preds:
+        return metrics
+
+    if "accuracy" in SELECTED_METRICS:
+        metrics["accuracy"] = accuracy_score(targets, preds)
+    if "precision" in SELECTED_METRICS:
+        metrics["precision"] = precision_score(targets, preds, average="weighted", zero_division=0)
+    if "recall" in SELECTED_METRICS:
+        metrics["recall"] = recall_score(targets, preds, average="weighted", zero_division=0)
+    if "f1_score" in SELECTED_METRICS:
+        metrics["f1_score"] = f1_score(targets, preds, average="weighted", zero_division=0)
+    return metrics
+
+def main():
+    print("[INFO] Инициализация модели и данных...")
+    model = {{ model_class_name }}().to(device)
+    train_loader, test_loader = get_dataloaders(batch_size=BATCH_SIZE)
+    optimizer = {{ optimizer_name }}(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+    loss_fn = {{ loss_function_name }}()
+
+    print(f"[INFO] Запуск обучения: {EPOCHS} эпох | Оптимизатор: {{ optimizer_name.split('.')[-1] }} | Loss: {{ loss_function_name.split('.')[-1] }}")
+    print("-" * 60)
+
+    best_val_loss = float("inf")
+
+    for epoch in range(1, EPOCHS + 1):
+        train_loss, train_preds, train_targets = train_one_epoch(model, train_loader, optimizer, loss_fn)
+        val_loss, val_preds, val_targets = validate_epoch(model, test_loader, loss_fn)
+
+        train_m = compute_metrics(train_preds, train_targets)
+        val_m = compute_metrics(val_preds, val_targets)
+
+        # Формирование строки лога
+        log_parts = [f"Эпоха {epoch}/{EPOCHS}"]
+        log_parts.append(f"Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
+
+        for metric in ["accuracy", "precision", "recall", "f1_score"]:
+            if metric in SELECTED_METRICS:
+                log_parts.append(f"Train {metric.capitalize()}: {train_m[metric]:.4f} | Val {metric.capitalize()}: {val_m[metric]:.4f}")
+
+        print(" | ".join(log_parts))
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            torch.save(model.state_dict(), SAVE_PATH)
+            print(f"Сохранена улучшенная модель (Val Loss: {best_val_loss:.4f})")
+
+    print("-" * 60)
+    print(f"Обучение завершено! Лучший Val Loss: {best_val_loss:.4f}")
+    print(f"Веса сохранены в: {os.path.abspath(SAVE_PATH)}")
+
+if __name__ == "__main__":
+    main()
