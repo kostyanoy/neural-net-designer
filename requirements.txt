@@ -1,5 +1,7 @@
 black==26.3.1
-jinja2==3.1.6
-NodeGraphQt==0.6.44
+Jinja2==3.1.6
+nodegraphqt==0.6.44
 PyQt5==5.15.11
-torch==2.8.0+cpu
+pyqt5_sip==12.18.0
+pyqtgraph==0.14.0
+scikit-learn==1.7.2
