@@ -13,7 +13,7 @@ __all__ = [
     "ActivationNode",
     "Conv2DNode",
     "DenseNode",
-    "DropoutNode"
+    "DropoutNode",
     "FlattenNode",
     "InputNode",
     "MergeNode",

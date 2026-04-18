@@ -55,7 +55,7 @@ class DataWidget(QWidget):
         self.dataset_combo.addItems([
             "Цветки Ириса",
             "MNIST",
-            "Свой датасет"
+            # "Свой датасет",
         ])
         self.dataset_combo.currentIndexChanged.connect(self._on_dataset_changed)
         dataset_layout.addRow("Тип:", self.dataset_combo)

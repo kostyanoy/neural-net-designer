@@ -23,7 +23,7 @@ class ModelCodeGenerator:
     @staticmethod
     def _sanitize_name(name: str) -> str:
         """Преобразует произвольное имя узла в валидный Python-идентификатор."""
-        clean = re.sub(r'[^a-zA-Z0-9_]', '_', name.strip())
+        clean = re.sub(r'[^a-zA-Z0-9а-яА-ЯёЁ_]', '_', name.strip())
         if not clean or clean[0].isdigit():
             clean = f"layer_{clean}"
         return clean.lower()
