@@ -82,6 +82,12 @@ class TrainingTab(QWidget):
 
         device = torch.device(training_params["device"])
         model = model.to(device)
+        dummy_input = torch.randn(1, *dataset_info["input_shape"]).to(device)
+        model.eval()
+        with torch.no_grad():
+            _ = model(dummy_input)
+        model.train()
+        model = model.to(device)
 
         optimizer = self.training_widget.create_optimizer(model.parameters())
         loss_fn = self.training_widget.create_loss_function()
