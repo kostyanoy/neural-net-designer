@@ -39,7 +39,13 @@ pip install -r requirements.txt
 
 ### 2. Установка PyTorch в зависимости от вашего оборудования
 #### Вариант А: Только CPU (подходит для любого компьютера)
-2.1. Выполните:
+
+2.1. При необходимости удалите старые пакеты
+```bash
+pip uninstall torch torchvision -y
+```
+
+2.2. Выполните:
 ```bash
 pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
 pip install torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cpu
@@ -53,22 +59,18 @@ pip install torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cpu
   ```
   В верхней части вывода найдите строку `CUDA Version: X.Y` (например, `13.1`).
 - Если команда не найдена или драйвер NVIDIA отсутствует, значит GPU не поддерживается — используйте вариант А (CPU).  
+- Версия CUDA должна быть хотя бы `12.6`
 
-2.2. Выберите правильный индекс PyTorch в зависимости от версии CUDA:
-
-| Версия CUDA | Индекс PyTorch |
-|-------------|----------------|
-| 11.8        | `cu118`        |
-| 12.1        | `cu121`        |
-| 12.4        | `cu124`        |
-| 13.1        | `cu131`        |
-
-2.3. **Пример установки для CUDA 13.1:**
+2.2. При необходимости удалите старые пакеты
 ```bash
-pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu131
-pip install torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu131
+pip uninstall torch torchvision -y
 ```
-Для CUDA 12.1 замените `cu118` на `cu121`, и так далее.
+
+2.3. Выполните:
+```bash
+pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu126
+pip install torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu126
+```
 
 ### 3. Запуск приложения
 Точка входа находится в корне репозитория:
