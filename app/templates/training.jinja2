@@ -14,7 +14,7 @@ WEIGHT_DECAY = {{ weight_decay }}
 SELECTED_METRICS = {{ selected_metrics }}
 SAVE_PATH = "best_model.pth"
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("{{ device }}")
 print(f"[INFO] Используемое устройство: {device}")
 
 def train_one_epoch(model, dataloader, optimizer, loss_fn):

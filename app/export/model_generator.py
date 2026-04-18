@@ -51,7 +51,16 @@ class ModelCodeGenerator:
             return f"{cls}(kernel_size={k}, stride={s}, padding={p})"
         elif t == "Activation":
             fn = node.get_property("function")
-            return "nn.Softmax(dim=1)" if fn == "softmax" else f"nn.{fn.capitalize()}()"
+            if fn == "softmax":
+                return "nn.Softmax(dim=1)"
+            elif fn == "relu":
+                return "nn.ReLU()"
+            elif fn == "sigmoid":
+                return "nn.Sigmoid()"
+            elif fn == "tanh":
+                return "nn.Tanh()"
+            else:
+                return f"nn.{fn.capitalize()}()"
         elif t == "Merge":
             return f"MergeLayer(mode='{node.get_property('mode')}')"
         elif t == "Split":

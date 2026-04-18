@@ -3,7 +3,7 @@ import numpy as np
 from pathlib import Path
 from sklearn import datasets as sklearn_datasets
 from sklearn.model_selection import train_test_split
-from torch.utils.data import TensorDataset
+from torch.utils.data import TensorDataset, DataLoader
 
 def load_dataset(
     train_split: float = {{ train_split }},
@@ -33,6 +33,11 @@ def load_dataset(
     test_ds = TensorDataset(torch.FloatTensor(X_test), torch.LongTensor(y_test))
     return train_ds, test_ds
 
+def get_dataloaders(batch_size: int, train_split: float = {{ train_split }}, norm_type: str = "{{ norm_type }}", stratified: bool = {{ stratified }}):
+    train_ds, test_ds = load_dataset(train_split, norm_type, stratified)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
+    return train_loader, test_loader
 
 if __name__ == "__main__":
     train, test = load_dataset()

@@ -38,7 +38,8 @@ class TrainingCodeGenerator:
             "weight_decay": self.config["weight_decay"],
             "loss_function_name": loss_name,
             "epochs": self.config["epochs"],
-            "selected_metrics": selected_metrics
+            "selected_metrics": selected_metrics,
+            "device": self.config["device"],
         }
 
         env = Environment(loader=FileSystemLoader(TEMPLATES_DIR))
