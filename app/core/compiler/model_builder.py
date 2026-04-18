@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple
 import torch
 from torch import nn
 
-from core.compiler.merge_layer import MergeLayer
+from app.core.compiler.merge_layer import MergeLayer
 
 
 class DynamicGraphModel(nn.Module):

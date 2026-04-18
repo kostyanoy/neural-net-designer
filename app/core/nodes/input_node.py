@@ -1,5 +1,5 @@
-from core.nodes.base_node import MyBaseNode
-from core.nodes.properties import TextProperty
+from app.core.nodes.base_node import MyBaseNode
+from app.core.nodes.properties import TextProperty
 
 
 class InputNode(MyBaseNode):

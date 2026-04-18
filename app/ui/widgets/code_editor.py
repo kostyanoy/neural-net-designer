@@ -1,7 +1,7 @@
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QPlainTextEdit
 
-from ui.widgets.syntax_highlighter import PythonSyntaxHighlighter
+from app.ui.widgets.syntax_highlighter import PythonSyntaxHighlighter
 
 
 class CodeEditor(QPlainTextEdit):

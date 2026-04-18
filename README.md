@@ -17,14 +17,19 @@
 ## Инструкция по установке
 ### 1. Общие зависимости
 1.1. Убедитесь, что у вас установлен **Python 3.10**.  
+```bash
+python --version
+```
 1.2. Скачайте или склонируйте репозиторий.  
 ```bash
 git clone git@github.com:kostyanoy/neural-net-designer.git
+cd neural-net-designer/
 ```
 1.3. Создайте и активируйте виртуальное окружение
 ```bash
 python -m venv venv
-venv\Scripts\activate
+.\venv\Scripts\activate.bat  # Windows
+source venv/bin/activate  # Linux
 ```
 1.4. В корневой папке выполните:
 ```bash
@@ -40,7 +45,7 @@ pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
 pip install torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cpu
 ```
 
-#### Вариант Б: GPU (NVIDIA CUDA)
+#### Вариант Б: GPU (NVIDIA CUDA) - весит гораздо больше
 2.1. Сначала определите, какая версия CUDA установлена в вашей системе.
 - Откройте терминал и выполните команду:  
   ```bash

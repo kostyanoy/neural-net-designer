@@ -1,4 +1,4 @@
-from core.nodes.base_node import MyBaseNode
+from app.core.nodes.base_node import MyBaseNode
 
 
 class OutputNode(MyBaseNode):

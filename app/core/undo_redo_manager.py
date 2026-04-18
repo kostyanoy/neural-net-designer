@@ -1,6 +1,6 @@
 import json
 
-from config import MAX_UNDO_STEPS
+from app.config import MAX_UNDO_STEPS
 
 
 class UndoRedoManager:

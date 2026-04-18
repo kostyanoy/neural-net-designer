@@ -10,8 +10,8 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import TensorDataset
 from torchvision import transforms, datasets
 
-from ui.dialog.message_boxes import choose_file_dataset, choose_dir_dataset
-from config import DATASETS_DIR
+from app.ui.dialog.message_boxes import choose_file_dataset, choose_dir_dataset
+from app.config import DATASETS_DIR
 
 
 class DataWidget(QWidget):

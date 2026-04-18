@@ -5,9 +5,9 @@ import black
 from NodeGraphQt import NodeGraph
 from jinja2 import FileSystemLoader, Environment
 
-from config import TEMPLATES_DIR
-from core.compiler import GraphCompiler
-from core.nodes.base_node import MyBaseNode
+from app.config import TEMPLATES_DIR
+from app.core.compiler import GraphCompiler
+from app.core.nodes.base_node import MyBaseNode
 
 
 class ModelCodeGenerator:

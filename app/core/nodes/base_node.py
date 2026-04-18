@@ -2,7 +2,7 @@ from NodeGraphQt import BaseNode
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QGraphicsTextItem
 
-from core.nodes.properties import Property
+from app.core.nodes.properties import Property
 
 
 class MyBaseNode(BaseNode):

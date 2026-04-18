@@ -1,5 +1,5 @@
-from core.nodes.base_node import MyBaseNode
-from core.nodes.properties import IntProperty, CheckboxProperty
+from app.core.nodes.base_node import MyBaseNode
+from app.core.nodes.properties import IntProperty, CheckboxProperty
 
 
 class Conv2DNode(MyBaseNode):

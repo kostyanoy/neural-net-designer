@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PyQt5.QtCore import QObject, pyqtSignal
 
-from config import VERSION
+from app.config import VERSION
 
 
 class ProjectManager(QObject):

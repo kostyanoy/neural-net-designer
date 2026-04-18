@@ -5,15 +5,15 @@ import torch
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QMainWindow, QStatusBar, QTabWidget, QMessageBox
 
-from config import APP_NAME
-from core.project_manager import ProjectManager
-from export.dataset_generator import DatasetCodeGenerator
-from export.model_generator import ModelCodeGenerator
-from export.training_generator import TrainingCodeGenerator
-from ui.dialog.info_dialogs import show_documentation, show_about, wrong_input, wrong_output
-from ui.dialog.message_boxes import save_changes_box, choose_open_file, choose_save_file, choose_load_weight_file
-from ui.menu_bar import CustomMenuBar
-from ui.tabs import ArchitectureTab, TrainingTab, MonitorTab, ExportTab
+from app.config import APP_NAME
+from app.core.project_manager import ProjectManager
+from app.export.dataset_generator import DatasetCodeGenerator
+from app.export.model_generator import ModelCodeGenerator
+from app.export.training_generator import TrainingCodeGenerator
+from app.ui.dialog.info_dialogs import show_documentation, show_about, wrong_input, wrong_output
+from app.ui.dialog.message_boxes import save_changes_box, choose_open_file, choose_save_file, choose_load_weight_file
+from app.ui.menu_bar import CustomMenuBar
+from app.ui.tabs import ArchitectureTab, TrainingTab, MonitorTab, ExportTab
 
 
 class MainWindow(QMainWindow):

@@ -5,9 +5,9 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QSplitter
 from torch import nn
 from torch.utils.data import DataLoader
 
-from core.project_manager import ProjectManager
-from ui.widgets.data_widget import DataWidget
-from ui.widgets.training_widget import TrainingWidget
+from app.core.project_manager import ProjectManager
+from app.ui.widgets.data_widget import DataWidget
+from app.ui.widgets.training_widget import TrainingWidget
 
 
 class TrainingTab(QWidget):

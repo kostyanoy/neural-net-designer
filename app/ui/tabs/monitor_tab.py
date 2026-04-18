@@ -6,8 +6,8 @@ from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget, QSplitter, QGroupBox, 
     QProgressBar, QGridLayout, QTabWidget, QTextEdit, QHeaderView, QTableView
 from pyqtgraph import PlotWidget
 
-from core.training.training_worker import TrainingWorker
-from ui.widgets.metric_table_model import MetricsTableModel
+from app.core.training.training_worker import TrainingWorker
+from app.ui.widgets.metric_table_model import MetricsTableModel
 
 
 class MonitorTab(QWidget):

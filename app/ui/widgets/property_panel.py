@@ -4,8 +4,8 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox, QSlider, \
     QHBoxLayout, QLineEdit
 
-from core.nodes.base_node import MyBaseNode
-from core.nodes.properties import IntProperty, FloatProperty, TextProperty, ComboProperty, \
+from app.core.nodes.base_node import MyBaseNode
+from app.core.nodes.properties import IntProperty, FloatProperty, TextProperty, ComboProperty, \
     CheckboxProperty, SliderProperty, Property
 
 

@@ -8,15 +8,15 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QDockWidget, QLineEdit, QListW
     QListWidgetItem, QPushButton, QLabel
 from torch import nn
 
-from core.compiler import GraphCompiler
-from core.nodes import ActivationNode, FlattenNode, InputNode, OutputNode, MergeNode, SplitNode, Conv2DNode, \
+from app.core.compiler import GraphCompiler
+from app.core.nodes import ActivationNode, FlattenNode, InputNode, OutputNode, MergeNode, SplitNode, Conv2DNode, \
     PoolingNode, DropoutNode
-from core.nodes.base_node import MyBaseNode
-from core.nodes.dense_node import DenseNode
-from core.project_manager import ProjectManager
-from core.undo_redo_manager import UndoRedoManager
-from ui.widgets.draggable_list_widget import DraggableListWidget
-from ui.widgets.property_panel import PropertyPanel
+from app.core.nodes.base_node import MyBaseNode
+from app.core.nodes.dense_node import DenseNode
+from app.core.project_manager import ProjectManager
+from app.core.undo_redo_manager import UndoRedoManager
+from app.ui.widgets.draggable_list_widget import DraggableListWidget
+from app.ui.widgets.property_panel import PropertyPanel
 
 
 class ArchitectureTab(QWidget):

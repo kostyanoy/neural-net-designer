@@ -1,7 +1,7 @@
 import black
 from jinja2 import Environment, FileSystemLoader
 
-from config import TEMPLATES_DIR
+from app.config import TEMPLATES_DIR
 
 class TrainingCodeGenerator:
     """Генерирует Python-код для обучения модели."""

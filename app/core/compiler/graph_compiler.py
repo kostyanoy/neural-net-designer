@@ -3,11 +3,11 @@ from typing import Dict, List
 from NodeGraphQt import NodeGraph
 from torch import nn
 
-from core.compiler.merge_layer import MergeLayer
-from core.compiler.model_builder import DynamicGraphModel
-from core.compiler.split_layer import SplitLayer
-from core.nodes import ActivationNode, PoolingNode
-from core.nodes.base_node import MyBaseNode
+from app.core.compiler.merge_layer import MergeLayer
+from app.core.compiler.model_builder import DynamicGraphModel
+from app.core.compiler.split_layer import SplitLayer
+from app.core.nodes import ActivationNode, PoolingNode
+from app.core.nodes.base_node import MyBaseNode
 
 
 class GraphCompiler:

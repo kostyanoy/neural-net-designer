@@ -1,5 +1,5 @@
-from core.nodes.base_node import MyBaseNode
-from core.nodes.properties import ComboProperty, IntProperty
+from app.core.nodes.base_node import MyBaseNode
+from app.core.nodes.properties import ComboProperty, IntProperty
 
 
 class PoolingNode(MyBaseNode):

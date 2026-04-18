@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
 
-from config import PROJECTS_DIR
+from app.config import PROJECTS_DIR
 
 
 def save_changes_box(parent=None):

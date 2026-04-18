@@ -1,8 +1,8 @@
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QHBoxLayout, QLabel, QComboBox, QPushButton
 
-from ui.dialog.message_boxes import choose_code_file, choose_weights_file
-from ui.widgets.code_editor import CodeEditor
+from app.ui.dialog.message_boxes import choose_code_file, choose_weights_file
+from app.ui.widgets.code_editor import CodeEditor
 
 
 class ExportTab(QWidget):

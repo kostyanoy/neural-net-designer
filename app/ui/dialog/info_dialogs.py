@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMessageBox
 
-from config import APP_NAME, ORGANIZATION, VERSION, AUTHOR
+from app.config import APP_NAME, ORGANIZATION, VERSION, AUTHOR
 
 
 def show_documentation(parent=None):
