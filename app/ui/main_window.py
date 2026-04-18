@@ -384,7 +384,7 @@ class MainWindow(QMainWindow):
             return
 
         if arch_output_shape != (dataset_num_classes,):
-            wrong_output(self, arch_output_shape, dataset_input_shape)
+            wrong_output(self, arch_output_shape, (dataset_num_classes,))
             return
         self.monitor_tab.set_training_data(training_data)
         training_data["input_shape"] = arch_input_shape
