@@ -59,7 +59,6 @@ pip install torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cpu
   ```
   В верхней части вывода найдите строку `CUDA Version: X.Y` (например, `13.1`).
 - Если команда не найдена или драйвер NVIDIA отсутствует, значит GPU не поддерживается — используйте вариант А (CPU).  
-- Версия CUDA должна быть хотя бы `12.6`
 
 2.2. При необходимости удалите старые пакеты
 ```bash
@@ -71,6 +70,7 @@ pip uninstall torch torchvision -y
 pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu126
 pip install torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu126
 ```
+- ВНИМАНИЕ: Вам стоит уточнить, какая версия cuXXX подходит под вашу видеокарту! Замените cu126, если эта версия не подходит под вашу видеокарту!
 
 ### 3. Запуск приложения
 Точка входа находится в корне репозитория:
